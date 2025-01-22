@@ -11,6 +11,13 @@ content %}
     <option value="transferencia">Transferencia Bancaria</option>
   </select>
   <br />
+  <label for="duracion">Duración del Acceso:</label>
+  <select name="duracion" required>
+    <option value="1_mes">1 Mes</option>
+    <option value="6_meses">6 Meses</option>
+    <option value="1_ano">1 Año</option>
+  </select>
+  <br />
   <button type="submit">Comprar</button>
 </form>
 {% endblock %}

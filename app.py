@@ -1,9 +1,10 @@
+from datetime import datetime
 from flask_migrate import Migrate
 from flask import Flask, render_template, redirect, url_for, request, flash
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, login_required, current_user, logout_user
 from werkzeug.security import generate_password_hash, check_password_hash
-from datetime import datetime
+from datetime import datetime, timedelta
 import stripe
 import paypalrestsdk
 from dotenv import load_dotenv
@@ -72,6 +73,7 @@ class Venta(db.Model):
     fecha_venta = db.Column(db.DateTime, default=datetime.utcnow)
     estado_transferencia = db.Column(
         db.String(20), nullable=True, default='pendiente')
+    fecha_expiracion = db.Column(db.DateTime, nullable=False)
 
 
 @login_manager.user_loader
@@ -167,6 +169,19 @@ def comprar_curso(curso_id):
     curso = Curso.query.get_or_404(curso_id)
     if request.method == 'POST':
         metodo_pago = request.form['metodo']
+        duracion = request.form['duracion']
+
+        # Calcular la fecha de expiración
+        if duracion == '1_mes':
+            fecha_expiracion = datetime.utcnow() + timedelta(days=30)
+        elif duracion == '6_meses':
+            fecha_expiracion = datetime.utcnow() + timedelta(days=180)
+        elif duracion == '1_ano':
+            fecha_expiracion = datetime.utcnow() + timedelta(days=365)
+        else:
+            flash('Duración no válida.')
+            return redirect(request.url)
+
         # Por defecto, las compras con Stripe y PayPal se confirman automáticamente
         estado_transferencia = 'confirmada'
 
@@ -186,8 +201,8 @@ def comprar_curso(curso_id):
             estado_transferencia = 'pendiente'
 
         if pago:
-            venta = Venta(usuario_id=current_user.id, curso_id=curso.id,
-                          metodo_pago=metodo_pago, estado_transferencia=estado_transferencia)
+            venta = Venta(usuario_id=current_user.id, curso_id=curso.id, metodo_pago=metodo_pago,
+                          estado_transferencia=estado_transferencia, fecha_expiracion=fecha_expiracion)
             db.session.add(venta)
             db.session.commit()
             if estado_transferencia == 'pendiente':
@@ -310,8 +325,67 @@ def confirmar_transferencia(venta_id):
 def dashboard():
     cursos = Curso.query.all()
     mis_ventas = Venta.query.filter_by(usuario_id=current_user.id).all()
-    cursos_comprados_ids = [venta.curso_id for venta in mis_ventas]
-    return render_template('dashboard.html', cursos=cursos, mis_ventas=mis_ventas, cursos_comprados_ids=cursos_comprados_ids)
+    cursos_comprados_ids = [venta.curso_id for venta in mis_ventas if venta.estado_transferencia ==
+                            'confirmada' and venta.fecha_expiracion > datetime.utcnow()]
+    cursos_pendientes_ids = [
+        venta.curso_id for venta in mis_ventas if venta.estado_transferencia == 'pendiente']
+    current_time = datetime.utcnow()
+    return render_template('dashboard.html', cursos=cursos, mis_ventas=mis_ventas, cursos_comprados_ids=cursos_comprados_ids, cursos_pendientes_ids=cursos_pendientes_ids, current_time=current_time)
+
+
+@app.route('/admin_dashboard')
+@login_required
+def admin_dashboard():
+    if current_user.rol != 'admin':
+        return redirect(url_for('dashboard'))
+
+    # Obtener las ventas del día, semana, mes y año
+    hoy = datetime.utcnow().date()
+    inicio_semana = hoy - timedelta(days=hoy.weekday())
+    inicio_mes = hoy.replace(day=1)
+    inicio_ano = hoy.replace(month=1, day=1)
+
+    ventas_dia = Venta.query.filter(
+        db.func.date(Venta.fecha_venta) == hoy).all()
+    ventas_semana = Venta.query.filter(db.func.date(
+        Venta.fecha_venta) >= inicio_semana).all()
+    ventas_mes = Venta.query.filter(db.func.date(
+        Venta.fecha_venta) >= inicio_mes).all()
+    ventas_ano = Venta.query.filter(db.func.date(
+        Venta.fecha_venta) >= inicio_ano).all()
+
+    # Calcular el total de ventas
+    total_dia = sum(venta.curso.precio for venta in ventas_dia)
+    total_semana = sum(venta.curso.precio for venta in ventas_semana)
+    total_mes = sum(venta.curso.precio for venta in ventas_mes)
+    total_ano = sum(venta.curso.precio for venta in ventas_ano)
+
+    # Obtener los cursos más vendidos
+    cursos_mas_vendidos = db.session.query(
+        Curso.nombre, db.func.count(Venta.id).label('total_ventas')
+    ).join(Venta).group_by(Curso.id).order_by(db.func.count(Venta.id).desc()).all()
+
+    return render_template('admin_dashboard.html',
+                           total_dia=total_dia,
+                           total_semana=total_semana,
+                           total_mes=total_mes,
+                           total_ano=total_ano,
+                           cursos_mas_vendidos=cursos_mas_vendidos,
+                           ventas=ventas_ano)  # Pasar las ventas del año para la gestión de accesos
+
+
+@app.route('/quitar_acceso/<int:venta_id>', methods=['POST'])
+@login_required
+def quitar_acceso(venta_id):
+    if current_user.rol != 'admin':
+        flash('No tienes permiso para realizar esta acción.')
+        return redirect(url_for('dashboard'))
+
+    venta = Venta.query.get_or_404(venta_id)
+    db.session.delete(venta)
+    db.session.commit()
+    flash('Acceso al curso quitado exitosamente.')
+    return redirect(url_for('admin_dashboard'))
 
 
 with app.app_context():

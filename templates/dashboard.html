@@ -19,12 +19,24 @@ content %}
 
 <h2>Mis Compras</h2>
 <ul>
-  {% for venta in mis_ventas %}
+  {% for venta in mis_ventas %} {% if venta.estado_transferencia == 'confirmada'
+  and venta.fecha_expiracion > current_time %}
   <li>
     Curso: {{ venta.curso.nombre }} - Método de Pago: {{ venta.metodo_pago }} -
-    Fecha: {{ venta.fecha_venta }}
+    Fecha: {{ venta.fecha_venta }} - Expira: {{ venta.fecha_expiracion }}
   </li>
-  {% endfor %}
+  {% endif %} {% endfor %}
+</ul>
+
+<h2>Cursos Pendientes de Confirmación</h2>
+<ul>
+  {% for venta in mis_ventas %} {% if venta.estado_transferencia == 'pendiente'
+  %}
+  <li>
+    Curso: {{ venta.curso.nombre }} - Método de Pago: {{ venta.metodo_pago }} -
+    Fecha: {{ venta.fecha_venta }} - <span>Pendiente de Confirmación</span>
+  </li>
+  {% endif %} {% endfor %}
 </ul>
 
 <h2>Cursos Disponibles</h2>
@@ -34,6 +46,8 @@ content %}
     {{ curso.nombre }} - {{ curso.precio }} USD {% if curso.id in
     cursos_comprados_ids %}
     <span>Ya comprado</span>
+    {% elif curso.id in cursos_pendientes_ids %}
+    <span>Pendiente de Confirmación</span>
     {% else %}
     <a href="{{ url_for('comprar_curso', curso_id=curso.id) }}">Comprar</a>
     {% endif %}
