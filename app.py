@@ -27,12 +27,22 @@ login_manager.login_view = 'login'
 migrate = Migrate(app, db)
 
 # Configurar Stripe y PayPal con las variables de entorno
-stripe.api_key = os.getenv('STRIPE_API_KEY')
-paypalrestsdk.configure({
-    "mode": "sandbox",  # Cambiar a "live" en producción
-    "client_id": os.getenv('PAYPAL_CLIENT_ID'),
-    "client_secret": os.getenv('PAYPAL_CLIENT_SECRET')
-})
+app_mode = os.getenv('APP_MODE', 'development')
+
+if app_mode == 'production':
+    stripe.api_key = os.getenv('STRIPE_API_KEY_LIVE')
+    paypalrestsdk.configure({
+        "mode": "live",
+        "client_id": os.getenv('PAYPAL_CLIENT_ID_LIVE'),
+        "client_secret": os.getenv('PAYPAL_CLIENT_SECRET_LIVE')
+    })
+else:
+    stripe.api_key = os.getenv('STRIPE_API_KEY_SANDBOX')
+    paypalrestsdk.configure({
+        "mode": "sandbox",
+        "client_id": os.getenv('PAYPAL_CLIENT_ID_SANDBOX'),
+        "client_secret": os.getenv('PAYPAL_CLIENT_SECRET_SANDBOX')
+    })
 
 
 class Usuario(db.Model, UserMixin):
@@ -168,7 +178,8 @@ def comprar_curso(curso_id):
                                  curso_id=curso.id, _external=True)
             cancel_url = url_for('dashboard', _external=True)
             pago = procesar_pago_paypal(curso.precio, return_url, cancel_url)
-            return redirect(pago['links'][1]['href'])
+            if pago:
+                return redirect(pago['links'][1]['href'])
         elif metodo_pago == "transferencia":
             pago = procesar_pago_transferencia(curso.precio, current_user.id)
             # Las compras con transferencia quedan pendientes
@@ -230,6 +241,39 @@ def procesar_pago_paypal(precio, return_url, cancel_url):
     else:
         flash(f"Error en el pago con PayPal: {payment.error['message']}")
         return None
+
+
+@app.route('/confirmar_paypal', methods=['GET'])
+@login_required
+def confirmar_paypal():
+    payment_id = request.args.get('paymentId')
+    payer_id = request.args.get('PayerID')
+    curso_id = request.args.get('curso_id')
+
+    payment = paypalrestsdk.Payment.find(payment_id)
+
+    if payment.execute({"payer_id": payer_id}):
+        venta = Venta.query.filter_by(
+            usuario_id=current_user.id, curso_id=curso_id, metodo_pago='paypal').first()
+        if venta:
+            venta.estado_transferencia = 'confirmada'
+            db.session.commit()
+            flash('Pago con PayPal confirmado exitosamente.')
+        else:
+            # Crear una nueva venta si no se encuentra una existente
+            nueva_venta = Venta(
+                usuario_id=current_user.id,
+                curso_id=curso_id,
+                metodo_pago='paypal',
+                estado_transferencia='confirmada'
+            )
+            db.session.add(nueva_venta)
+            db.session.commit()
+            flash('Pago con PayPal confirmado exitosamente y venta registrada.')
+    else:
+        flash('Error al confirmar el pago con PayPal.')
+
+    return redirect(url_for('dashboard'))
 
 
 def procesar_pago_transferencia(precio, usuario_id):
