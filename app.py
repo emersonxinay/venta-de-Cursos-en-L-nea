@@ -49,7 +49,8 @@ class Curso(db.Model):
     nombre = db.Column(db.String(100), nullable=False)
     descripcion = db.Column(db.String(500))
     precio = db.Column(db.Float, nullable=False)
-    ventas = db.relationship('Venta', backref='curso', lazy=True)
+    ventas = db.relationship('Venta', backref='curso',
+                             lazy=True, cascade="all, delete-orphan")
 
 
 class Venta(db.Model):
@@ -265,7 +266,8 @@ def confirmar_transferencia(venta_id):
 def dashboard():
     cursos = Curso.query.all()
     mis_ventas = Venta.query.filter_by(usuario_id=current_user.id).all()
-    return render_template('dashboard.html', cursos=cursos, mis_ventas=mis_ventas)
+    cursos_comprados_ids = [venta.curso_id for venta in mis_ventas]
+    return render_template('dashboard.html', cursos=cursos, mis_ventas=mis_ventas, cursos_comprados_ids=cursos_comprados_ids)
 
 
 with app.app_context():

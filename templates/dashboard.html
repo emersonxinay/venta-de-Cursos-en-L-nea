@@ -31,8 +31,12 @@ content %}
 <ul>
   {% for curso in cursos %}
   <li>
-    {{ curso.nombre }} - {{ curso.precio }} USD
+    {{ curso.nombre }} - {{ curso.precio }} USD {% if curso.id in
+    cursos_comprados_ids %}
+    <span>Ya comprado</span>
+    {% else %}
     <a href="{{ url_for('comprar_curso', curso_id=curso.id) }}">Comprar</a>
+    {% endif %}
   </li>
   {% endfor %}
 </ul>
