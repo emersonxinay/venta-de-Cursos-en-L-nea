@@ -1,0 +1,18 @@
+{% extends "base.html" %} {% block title %}Confirmar Transferencias{% endblock
+%} {% block content %}
+<h1>Confirmar Transferencias</h1>
+<ul>
+  {% for venta in ventas %}
+  <li>
+    Curso: {{ venta.curso.nombre }} - Comprado por: {{ venta.usuario.nombre }} -
+    Método de Pago: {{ venta.metodo_pago }} - Fecha: {{ venta.fecha_venta }}
+    <form
+      method="POST"
+      action="{{ url_for('confirmar_transferencia', venta_id=venta.id) }}"
+    >
+      <button type="submit">Confirmar Transferencia</button>
+    </form>
+  </li>
+  {% endfor %}
+</ul>
+{% endblock %}

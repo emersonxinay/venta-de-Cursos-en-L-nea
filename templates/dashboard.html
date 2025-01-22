@@ -1,6 +1,8 @@
 {% extends "base.html" %} {% block title %}Dashboard{% endblock %} {% block
 content %}
 <h1>Bienvenido al Dashboard</h1>
+
+{% if current_user.rol == 'admin' %}
 <a href="{{ url_for('nuevo_curso') }}">Crear Nuevo Curso</a>
 <br />
 <h2>Lista de Cursos</h2>
@@ -13,13 +15,24 @@ content %}
   </li>
   {% endfor %}
 </ul>
+{% endif %}
 
-<h2>Lista de Ventas</h2>
+<h2>Mis Compras</h2>
 <ul>
-  {% for venta in ventas %}
+  {% for venta in mis_ventas %}
   <li>
-    Curso: {{ venta.curso.nombre }} - Comprado por: {{ venta.usuario.nombre }} -
-    Método de Pago: {{ venta.metodo_pago }} - Fecha: {{ venta.fecha_venta }}
+    Curso: {{ venta.curso.nombre }} - Método de Pago: {{ venta.metodo_pago }} -
+    Fecha: {{ venta.fecha_venta }}
+  </li>
+  {% endfor %}
+</ul>
+
+<h2>Cursos Disponibles</h2>
+<ul>
+  {% for curso in cursos %}
+  <li>
+    {{ curso.nombre }} - {{ curso.precio }} USD
+    <a href="{{ url_for('comprar_curso', curso_id=curso.id) }}">Comprar</a>
   </li>
   {% endfor %}
 </ul>

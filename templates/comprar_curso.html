@@ -1,0 +1,16 @@
+{% extends "base.html" %} {% block title %}Comprar Curso{% endblock %} {% block
+content %}
+<h1>Comprar Curso: {{ curso.nombre }}</h1>
+<p>Descripción: {{ curso.descripcion }}</p>
+<p>Precio: {{ curso.precio }} USD</p>
+<form method="POST" action="{{ url_for('comprar_curso', curso_id=curso.id) }}">
+  <label for="metodo">Método de Pago:</label>
+  <select name="metodo" required>
+    <option value="stripe">Stripe</option>
+    <option value="paypal">PayPal</option>
+    <option value="transferencia">Transferencia Bancaria</option>
+  </select>
+  <br />
+  <button type="submit">Comprar</button>
+</form>
+{% endblock %}
