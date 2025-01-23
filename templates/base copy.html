@@ -9,8 +9,11 @@
       rel="stylesheet"
       href="{{ url_for('static', filename='styles.css') }}"
     />
-    <!-- Incluir Chart.js -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Incluir Tremor CSS -->
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/tremor@latest/dist/tremor.css"
+    />
   </head>
   <body>
     <header>
@@ -35,7 +38,6 @@
         </ul>
       </nav>
     </header>
-
     <main>
       {% with messages = get_flashed_messages(with_categories=true) %} {% if
       messages %}
@@ -44,11 +46,10 @@
         <li class="{{ category }}">{{ message }}</li>
         {% endfor %}
       </ul>
-      {% endif %} {% endwith %} {% block content %}{% endblock %}
+      {% endif %} {% endwith %} {% block content %} {% endblock %}
     </main>
 
-    <footer>
-      <p>&copy; 2025 Mi Aplicación</p>
-    </footer>
+    <!-- Incluir Tremor JS -->
+    <script src="https://cdn.jsdelivr.net/npm/tremor@latest/dist/tremor.js"></script>
   </body>
 </html>

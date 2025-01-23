@@ -1,0 +1,63 @@
+<!-- filepath: /Users/emerson/Desktop/Todo_Mac/proyectos_python/venta_cursos_pagos/templates/admin_dashboard.html -->
+{% extends "base.html" %} {% block title %}Dashboard de Administrador{% endblock
+%} {% block content %}
+<h1>Dashboard de Administrador</h1>
+
+<h2>Ventas Totales</h2>
+<ul>
+  <li>Hoy: {{ total_dia }} USD</li>
+  <li>Esta Semana: {{ total_semana }} USD</li>
+  <li>Este Mes: {{ total_mes }} USD</li>
+  <li>Este Año: {{ total_ano }} USD</li>
+</ul>
+
+<h2>Cursos Más Vendidos</h2>
+<ul>
+  {% for curso, total_ventas in cursos_mas_vendidos %}
+  <li>{{ curso }} - {{ total_ventas }} ventas</li>
+  {% endfor %}
+</ul>
+
+<h2>Devoluciones</h2>
+<ul>
+  {% for curso, total_devoluciones in devoluciones %}
+  <li>{{ curso }} - {{ total_devoluciones }} devoluciones</li>
+  {% endfor %}
+</ul>
+
+<h2>Ventas Netas</h2>
+<ul>
+  <li>Hoy: {{ ventas_netas_dia }} USD</li>
+  <li>Esta Semana: {{ ventas_netas_semana }} USD</li>
+  <li>Este Mes: {{ ventas_netas_mes }} USD</li>
+  <li>Este Año: {{ ventas_netas_ano }} USD</li>
+</ul>
+
+<h2>Gestión de Accesos</h2>
+<ul>
+  {% for venta in ventas %}
+  <li>
+    Usuario: {{ venta.usuario.nombre }} - Curso: {{ venta.curso.nombre }} -
+    Fecha: {{ venta.fecha_venta }} {% if venta.estado_transferencia ==
+    'confirmada' %}
+    <form
+      method="POST"
+      action="{{ url_for('quitar_acceso', venta_id=venta.id) }}"
+      style="display:inline;"
+    >
+      <button type="submit">Quitar Acceso</button>
+    </form>
+    {% elif venta.estado_transferencia == 'devuelta' %}
+    <span>Acceso Quitado</span>
+    <form
+      method="POST"
+      action="{{ url_for('activar_acceso', venta_id=venta.id) }}"
+      style="display:inline;"
+    >
+      <button type="submit">Activar Acceso</button>
+    </form>
+    {% endif %}
+  </li>
+  {% endfor %}
+</ul>
+{% endblock %}

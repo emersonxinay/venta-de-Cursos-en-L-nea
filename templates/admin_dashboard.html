@@ -3,34 +3,70 @@
 %} {% block content %}
 <h1>Dashboard de Administrador</h1>
 
-<h2>Ventas Totales</h2>
-<ul>
-  <li>Hoy: {{ total_dia }} USD</li>
-  <li>Esta Semana: {{ total_semana }} USD</li>
-  <li>Este Mes: {{ total_mes }} USD</li>
-  <li>Este Año: {{ total_ano }} USD</li>
-</ul>
+<h2>Resumen de Ventas</h2>
+<canvas id="ventasTotalesChart"></canvas>
+<canvas id="ventasNetasChart"></canvas>
+<canvas id="devolucionesChart"></canvas>
 
 <h2>Cursos Más Vendidos</h2>
+<canvas id="cursosMasVendidosChart"></canvas>
+
+<h2>Gestión de Usuarios</h2>
 <ul>
-  {% for curso, total_ventas in cursos_mas_vendidos %}
-  <li>{{ curso }} - {{ total_ventas }} ventas</li>
+  {% for usuario in usuarios %}
+  <li>
+    {{ usuario.nombre }} - {{ usuario.correo }}
+    <a href="{{ url_for('editar_usuario', usuario_id=usuario.id) }}">Editar</a>
+    <form
+      method="POST"
+      action="{{ url_for('eliminar_usuario', usuario_id=usuario.id) }}"
+      style="display:inline;"
+    >
+      <button type="submit">Eliminar</button>
+    </form>
+  </li>
   {% endfor %}
 </ul>
 
-<h2>Devoluciones</h2>
+<h2>Gestión de Cursos</h2>
 <ul>
-  {% for curso, total_devoluciones in devoluciones %}
-  <li>{{ curso }} - {{ total_devoluciones }} devoluciones</li>
+  {% for curso in cursos %}
+  <li>
+    {{ curso.nombre }} - {{ curso.descripcion }}
+    <a href="{{ url_for('editar_curso', curso_id=curso.id) }}">Editar</a>
+    <form
+      method="POST"
+      action="{{ url_for('eliminar_curso', curso_id=curso.id) }}"
+      style="display:inline;"
+    >
+      <button type="submit">Eliminar</button>
+    </form>
+  </li>
   {% endfor %}
 </ul>
 
-<h2>Ventas Netas</h2>
+<h2>Transferencias Pendientes</h2>
 <ul>
-  <li>Hoy: {{ ventas_netas_dia }} USD</li>
-  <li>Esta Semana: {{ ventas_netas_semana }} USD</li>
-  <li>Este Mes: {{ ventas_netas_mes }} USD</li>
-  <li>Este Año: {{ ventas_netas_ano }} USD</li>
+  {% for transferencia in transferencias %}
+  <li>
+    {{ transferencia.usuario.nombre }} - {{ transferencia.curso.nombre }} - {{
+    transferencia.estado }}
+    <form
+      method="POST"
+      action="{{ url_for('aprobar_transferencia', transferencia_id=transferencia.id) }}"
+      style="display:inline;"
+    >
+      <button type="submit">Aprobar</button>
+    </form>
+    <form
+      method="POST"
+      action="{{ url_for('rechazar_transferencia', transferencia_id=transferencia.id) }}"
+      style="display:inline;"
+    >
+      <button type="submit">Rechazar</button>
+    </form>
+  </li>
+  {% endfor %}
 </ul>
 
 <h2>Gestión de Accesos</h2>
@@ -60,4 +96,128 @@
   </li>
   {% endfor %}
 </ul>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+      // Datos de ejemplo para ventas totales
+      const ventasTotalesData = {
+          labels: ['Hoy', 'Esta Semana', 'Este Mes', 'Este Año'],
+          datasets: [{
+              label: 'Ventas Totales',
+              data: [{{ total_dia }}, {{ total_semana }}, {{ total_mes }}, {{ total_ano }}],
+              backgroundColor: [
+                  'rgba(75, 192, 192, 0.2)',
+                  'rgba(54, 162, 235, 0.2)',
+                  'rgba(255, 206, 86, 0.2)',
+                  'rgba(153, 102, 255, 0.2)'
+              ],
+              borderColor: [
+                  'rgba(75, 192, 192, 1)',
+                  'rgba(54, 162, 235, 1)',
+                  'rgba(255, 206, 86, 1)',
+                  'rgba(153, 102, 255, 1)'
+              ],
+              borderWidth: 1
+          }]
+      };
+
+      const ctxVentasTotales = document.getElementById('ventasTotalesChart').getContext('2d');
+      new Chart(ctxVentasTotales, {
+          type: 'bar',
+          data: ventasTotalesData,
+          options: {
+              scales: {
+                  y: {
+                      beginAtZero: true
+                  }
+              }
+          }
+      });
+
+      // Datos de ejemplo para cursos más vendidos
+      const cursosMasVendidosData = {
+          labels: [{% for curso, total_ventas in cursos_mas_vendidos %}'{{ curso }}',{% endfor %}],
+          datasets: [{
+              label: 'Cursos Más Vendidos',
+              data: [{% for curso, total_ventas in cursos_mas_vendidos %}{{ total_ventas }},{% endfor %}],
+              backgroundColor: 'rgba(54, 162, 235, 0.2)',
+              borderColor: 'rgba(54, 162, 235, 1)',
+              borderWidth: 1
+          }]
+      };
+
+      const ctxCursosMasVendidos = document.getElementById('cursosMasVendidosChart').getContext('2d');
+      new Chart(ctxCursosMasVendidos, {
+          type: 'bar',
+          data: cursosMasVendidosData,
+          options: {
+              scales: {
+                  y: {
+                      beginAtZero: true
+                  }
+              }
+          }
+      });
+
+      // Datos de ejemplo para devoluciones
+      const devolucionesData = {
+          labels: [{% for curso, total_devoluciones in devoluciones %}'{{ curso }}',{% endfor %}],
+          datasets: [{
+              label: 'Devoluciones',
+              data: [{% for curso, total_devoluciones in devoluciones %}{{ total_devoluciones }},{% endfor %}],
+              backgroundColor: 'rgba(255, 99, 132, 0.2)',
+              borderColor: 'rgba(255, 99, 132, 1)',
+              borderWidth: 1
+          }]
+      };
+
+      const ctxDevoluciones = document.getElementById('devolucionesChart').getContext('2d');
+      new Chart(ctxDevoluciones, {
+          type: 'bar',
+          data: devolucionesData,
+          options: {
+              scales: {
+                  y: {
+                      beginAtZero: true
+                  }
+              }
+          }
+      });
+
+      // Datos de ejemplo para ventas netas
+      const ventasNetasData = {
+          labels: ['Hoy', 'Esta Semana', 'Este Mes', 'Este Año'],
+          datasets: [{
+              label: 'Ventas Netas',
+              data: [{{ ventas_netas_dia }}, {{ ventas_netas_semana }}, {{ ventas_netas_mes }}, {{ ventas_netas_ano }}],
+              backgroundColor: [
+                  'rgba(75, 192, 192, 0.2)',
+                  'rgba(54, 162, 235, 0.2)',
+                  'rgba(255, 206, 86, 0.2)',
+                  'rgba(153, 102, 255, 0.2)'
+              ],
+              borderColor: [
+                  'rgba(75, 192, 192, 1)',
+                  'rgba(54, 162, 235, 1)',
+                  'rgba(255, 206, 86, 1)',
+                  'rgba(153, 102, 255, 1)'
+              ],
+              borderWidth: 1
+          }]
+      };
+
+      const ctxVentasNetas = document.getElementById('ventasNetasChart').getContext('2d');
+      new Chart(ctxVentasNetas, {
+          type: 'bar',
+          data: ventasNetasData,
+          options: {
+              scales: {
+                  y: {
+                      beginAtZero: true
+                  }
+              }
+          }
+      });
+  });
+</script>
 {% endblock %}

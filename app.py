@@ -92,19 +92,31 @@ def load_user(user_id):
     return Usuario.query.get(int(user_id))
 
 
+@app.route('/')
+def index():
+    return redirect(url_for('dashboard'))
+
+
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
         nombre = request.form['nombre']
         correo = request.form['correo']
         contrasena = request.form['contrasena']
+
+        # Verificar si el correo ya existe
+        usuario_existente = Usuario.query.filter_by(correo=correo).first()
+        if usuario_existente:
+            flash('El correo ya está registrado. Por favor, usa otro correo.')
+            return redirect(url_for('register'))
+
         hashed_password = generate_password_hash(
             contrasena, method='pbkdf2:sha256')
         nuevo_usuario = Usuario(
             nombre=nombre, correo=correo, contrasena=hashed_password, rol='usuario')
         db.session.add(nuevo_usuario)
         db.session.commit()
-        flash('Usuario registrado exitosamente. Por favor, inicia sesión.')
+        flash('Registro exitoso. Ahora puedes iniciar sesión.')
         return redirect(url_for('login'))
     return render_template('register.html')
 
