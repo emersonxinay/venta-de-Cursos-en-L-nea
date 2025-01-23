@@ -64,37 +64,41 @@ python3 app.py
 # Estructura de la Base de Datos
 
 Usuario:
-
-'''id: Integer, primary key
+```sql
+id: Integer, primary key
 nombre: String
 email: String
 password: String
-rol: String (admin o usuario)'''
+rol: String (admin o usuario)
+```
 Curso:
-
-'''id: Integer, primary key
+```sql
+id: Integer, primary key
 nombre: String
 descripcion: String
 precio: Float
 ventas: Relationship con Venta
-secciones: Relationship con Seccion'''
+secciones: Relationship con Seccion
+```
 Seccion:
-
-'''id: Integer, primary key
+```sql
+id: Integer, primary key
 titulo: String
 descripcion: String
 video_url: String
 curso_id: ForeignKey a Curso
-es_gratis: Boolean'''
+es_gratis: Boolean
+```
 Venta:
-
-'''id: Integer, primary key
+```sql
+id: Integer, primary key
 usuario_id: ForeignKey a Usuario
 curso_id: ForeignKey a Curso
 metodo_pago: String
 fecha_venta: DateTime
 estado_transferencia: String
-fecha_expiracion: DateTime'''
+fecha_expiracion: DateTime
+```
 
 ## Contribuciones
 Las contribuciones son bienvenidas. Por favor, abre un issue o un pull request para discutir cualquier cambio que te gustaría hacer.
