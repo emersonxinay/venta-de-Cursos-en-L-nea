@@ -1,8 +1,9 @@
+<!-- filepath: /Users/emerson/Desktop/Todo_Mac/proyectos_python/venta_cursos_pagos/templates/dashboard.html -->
 {% extends "base.html" %} {% block title %}Dashboard{% endblock %} {% block
 content %}
 <h1>Bienvenido al Dashboard</h1>
 
-{% if current_user.rol == 'admin' %}
+{% if current_user.is_authenticated and current_user.rol == 'admin' %}
 <a href="{{ url_for('nuevo_curso') }}">Crear Nuevo Curso</a>
 <br />
 <h2>Lista de Cursos</h2>
@@ -15,8 +16,7 @@ content %}
   </li>
   {% endfor %}
 </ul>
-{% endif %}
-
+{% endif %} {% if current_user.is_authenticated %}
 <h2>Mis Compras</h2>
 <ul>
   {% for venta in mis_ventas %} {% if venta.estado_transferencia == 'confirmada'
@@ -24,6 +24,7 @@ content %}
   <li>
     Curso: {{ venta.curso.nombre }} - Método de Pago: {{ venta.metodo_pago }} -
     Fecha: {{ venta.fecha_venta }} - Expira: {{ venta.fecha_expiracion }}
+    <a href="{{ url_for('ver_curso', curso_id=venta.curso.id) }}">Ver Curso</a>
   </li>
   {% endif %} {% endfor %}
 </ul>
@@ -38,18 +39,23 @@ content %}
   </li>
   {% endif %} {% endfor %}
 </ul>
+{% endif %}
 
 <h2>Cursos Disponibles</h2>
 <ul>
   {% for curso in cursos %}
   <li>
-    {{ curso.nombre }} - {{ curso.precio }} USD {% if curso.id in
+    {{ curso.nombre }} - {{ curso.precio }} USD
+    <a href="{{ url_for('ver_curso', curso_id=curso.id) }}">Ver Detalle</a>
+    {% if current_user.is_authenticated %} {% if curso.id in
     cursos_comprados_ids %}
     <span>Ya comprado</span>
     {% elif curso.id in cursos_pendientes_ids %}
     <span>Pendiente de Confirmación</span>
     {% else %}
     <a href="{{ url_for('comprar_curso', curso_id=curso.id) }}">Comprar</a>
+    {% endif %} {% else %}
+    <span>Inicia sesión para comprar</span>
     {% endif %}
   </li>
   {% endfor %}

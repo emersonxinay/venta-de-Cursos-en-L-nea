@@ -1,18 +1,36 @@
+<!-- filepath: /Users/emerson/Desktop/Todo_Mac/proyectos_python/venta_cursos_pagos/templates/base.html -->
 <!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <title>{% block title %}{% endblock %}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{% block title %}My App{% endblock %}</title>
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='styles.css') }}"
+    />
   </head>
   <body>
     <header>
       <nav>
-        <a href="{{ url_for('dashboard') }}">Dashboard</a>
-        {% if current_user.is_authenticated %}
-        <a href="{{ url_for('logout') }}">Logout</a>
-        {% else %}
-        <a href="{{ url_for('login') }}">Login</a>
-        {% endif %}
+        <ul>
+          <li><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
+          {% if current_user.is_authenticated %} {% if current_user.rol ==
+          'admin' %}
+          <li><a href="{{ url_for('nuevo_curso') }}">Crear Nuevo Curso</a></li>
+          <li>
+            <a href="{{ url_for('transferencias_pendientes') }}"
+              >Transferencias Pendientes</a
+            >
+          </li>
+          {% endif %}
+          <li><a href="{{ url_for('logout') }}">Logout</a></li>
+          <li>Bienvenido, {{ current_user.nombre }}</li>
+          {% else %}
+          <li><a href="{{ url_for('login') }}">Login</a></li>
+          <li><a href="{{ url_for('register') }}">Register</a></li>
+          {% endif %}
+        </ul>
       </nav>
     </header>
     <main>{% block content %}{% endblock %}</main>

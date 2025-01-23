@@ -62,6 +62,17 @@ class Curso(db.Model):
     precio = db.Column(db.Float, nullable=False)
     ventas = db.relationship('Venta', backref='curso',
                              lazy=True, cascade="all, delete-orphan")
+    secciones = db.relationship(
+        'Seccion', backref='curso', lazy=True, cascade="all, delete-orphan")
+
+
+class Seccion(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    titulo = db.Column(db.String(100), nullable=False)
+    descripcion = db.Column(db.String(500))
+    video_url = db.Column(db.String(200))
+    curso_id = db.Column(db.Integer, db.ForeignKey('curso.id'), nullable=False)
+    es_gratis = db.Column(db.Boolean, default=False)
 
 
 class Venta(db.Model):
@@ -116,6 +127,60 @@ def login():
 def logout():
     logout_user()
     return redirect(url_for('login'))
+
+
+@app.route('/curso/<int:curso_id>')
+def ver_curso(curso_id):
+    curso = Curso.query.get_or_404(curso_id)
+    secciones = Seccion.query.filter_by(curso_id=curso_id).all()
+    venta = None
+    if current_user.is_authenticated:
+        venta = Venta.query.filter_by(
+            usuario_id=current_user.id, curso_id=curso_id, estado_transferencia='confirmada').first()
+    return render_template('ver_curso.html', curso=curso, secciones=secciones, venta=venta)
+
+
+@app.route('/curso/<int:curso_id>/seccion/nueva', methods=['GET', 'POST'])
+@login_required
+def nueva_seccion(curso_id):
+    curso = Curso.query.get_or_404(curso_id)
+    if request.method == 'POST':
+        titulo = request.form['titulo']
+        descripcion = request.form['descripcion']
+        video_url = request.form['video_url']
+        es_gratis = 'es_gratis' in request.form
+        seccion = Seccion(titulo=titulo, descripcion=descripcion,
+                          video_url=video_url, curso_id=curso.id, es_gratis=es_gratis)
+        db.session.add(seccion)
+        db.session.commit()
+        flash('Sección creada exitosamente.')
+        return redirect(url_for('ver_curso', curso_id=curso.id))
+    return render_template('nueva_seccion.html', curso=curso)
+
+
+@app.route('/curso/<int:curso_id>/seccion/<int:seccion_id>/editar', methods=['GET', 'POST'])
+@login_required
+def editar_seccion(curso_id, seccion_id):
+    seccion = Seccion.query.get_or_404(seccion_id)
+    if request.method == 'POST':
+        seccion.titulo = request.form['titulo']
+        seccion.descripcion = request.form['descripcion']
+        seccion.video_url = request.form['video_url']
+        seccion.es_gratis = 'es_gratis' in request.form
+        db.session.commit()
+        flash('Sección actualizada exitosamente.')
+        return redirect(url_for('ver_curso', curso_id=curso_id))
+    return render_template('editar_seccion.html', seccion=seccion)
+
+
+@app.route('/curso/<int:curso_id>/seccion/<int:seccion_id>/eliminar', methods=['POST'])
+@login_required
+def eliminar_seccion(curso_id, seccion_id):
+    seccion = Seccion.query.get_or_404(seccion_id)
+    db.session.delete(seccion)
+    db.session.commit()
+    flash('Sección eliminada exitosamente.')
+    return redirect(url_for('ver_curso', curso_id=curso_id))
 
 
 @app.route('/nuevo_curso', methods=['GET', 'POST'])
@@ -189,8 +254,8 @@ def comprar_curso(curso_id):
             token = request.form['stripeToken']
             pago = procesar_pago_stripe(curso.precio, token)
         elif metodo_pago == "paypal":
-            return_url = url_for('confirmar_paypal',
-                                 curso_id=curso.id, _external=True)
+            return_url = url_for(
+                'confirmar_paypal', curso_id=curso.id, duracion=duracion, _external=True)
             cancel_url = url_for('dashboard', _external=True)
             pago = procesar_pago_paypal(curso.precio, return_url, cancel_url)
             if pago:
@@ -264,6 +329,18 @@ def confirmar_paypal():
     payment_id = request.args.get('paymentId')
     payer_id = request.args.get('PayerID')
     curso_id = request.args.get('curso_id')
+    duracion = request.args.get('duracion')
+
+    # Calcular la fecha de expiración
+    if duracion == '1_mes':
+        fecha_expiracion = datetime.utcnow() + timedelta(days=30)
+    elif duracion == '6_meses':
+        fecha_expiracion = datetime.utcnow() + timedelta(days=180)
+    elif duracion == '1_ano':
+        fecha_expiracion = datetime.utcnow() + timedelta(days=365)
+    else:
+        flash('Duración no válida.')
+        return redirect(url_for('dashboard'))
 
     payment = paypalrestsdk.Payment.find(payment_id)
 
@@ -272,6 +349,7 @@ def confirmar_paypal():
             usuario_id=current_user.id, curso_id=curso_id, metodo_pago='paypal').first()
         if venta:
             venta.estado_transferencia = 'confirmada'
+            venta.fecha_expiracion = fecha_expiracion
             db.session.commit()
             flash('Pago con PayPal confirmado exitosamente.')
         else:
@@ -280,7 +358,8 @@ def confirmar_paypal():
                 usuario_id=current_user.id,
                 curso_id=curso_id,
                 metodo_pago='paypal',
-                estado_transferencia='confirmada'
+                estado_transferencia='confirmada',
+                fecha_expiracion=fecha_expiracion
             )
             db.session.add(nueva_venta)
             db.session.commit()
@@ -321,57 +400,21 @@ def confirmar_transferencia(venta_id):
 
 
 @app.route('/dashboard')
-@login_required
 def dashboard():
     cursos = Curso.query.all()
-    mis_ventas = Venta.query.filter_by(usuario_id=current_user.id).all()
-    cursos_comprados_ids = [venta.curso_id for venta in mis_ventas if venta.estado_transferencia ==
-                            'confirmada' and venta.fecha_expiracion > datetime.utcnow()]
-    cursos_pendientes_ids = [
-        venta.curso_id for venta in mis_ventas if venta.estado_transferencia == 'pendiente']
+    mis_ventas = []
+    cursos_comprados_ids = []
+    cursos_pendientes_ids = []
     current_time = datetime.utcnow()
+
+    if current_user.is_authenticated:
+        mis_ventas = Venta.query.filter_by(usuario_id=current_user.id).all()
+        cursos_comprados_ids = [venta.curso_id for venta in mis_ventas if venta.estado_transferencia ==
+                                'confirmada' and venta.fecha_expiracion > current_time]
+        cursos_pendientes_ids = [
+            venta.curso_id for venta in mis_ventas if venta.estado_transferencia == 'pendiente']
+
     return render_template('dashboard.html', cursos=cursos, mis_ventas=mis_ventas, cursos_comprados_ids=cursos_comprados_ids, cursos_pendientes_ids=cursos_pendientes_ids, current_time=current_time)
-
-
-@app.route('/admin_dashboard')
-@login_required
-def admin_dashboard():
-    if current_user.rol != 'admin':
-        return redirect(url_for('dashboard'))
-
-    # Obtener las ventas del día, semana, mes y año
-    hoy = datetime.utcnow().date()
-    inicio_semana = hoy - timedelta(days=hoy.weekday())
-    inicio_mes = hoy.replace(day=1)
-    inicio_ano = hoy.replace(month=1, day=1)
-
-    ventas_dia = Venta.query.filter(
-        db.func.date(Venta.fecha_venta) == hoy).all()
-    ventas_semana = Venta.query.filter(db.func.date(
-        Venta.fecha_venta) >= inicio_semana).all()
-    ventas_mes = Venta.query.filter(db.func.date(
-        Venta.fecha_venta) >= inicio_mes).all()
-    ventas_ano = Venta.query.filter(db.func.date(
-        Venta.fecha_venta) >= inicio_ano).all()
-
-    # Calcular el total de ventas
-    total_dia = sum(venta.curso.precio for venta in ventas_dia)
-    total_semana = sum(venta.curso.precio for venta in ventas_semana)
-    total_mes = sum(venta.curso.precio for venta in ventas_mes)
-    total_ano = sum(venta.curso.precio for venta in ventas_ano)
-
-    # Obtener los cursos más vendidos
-    cursos_mas_vendidos = db.session.query(
-        Curso.nombre, db.func.count(Venta.id).label('total_ventas')
-    ).join(Venta).group_by(Curso.id).order_by(db.func.count(Venta.id).desc()).all()
-
-    return render_template('admin_dashboard.html',
-                           total_dia=total_dia,
-                           total_semana=total_semana,
-                           total_mes=total_mes,
-                           total_ano=total_ano,
-                           cursos_mas_vendidos=cursos_mas_vendidos,
-                           ventas=ventas_ano)  # Pasar las ventas del año para la gestión de accesos
 
 
 @app.route('/quitar_acceso/<int:venta_id>', methods=['POST'])
@@ -382,10 +425,93 @@ def quitar_acceso(venta_id):
         return redirect(url_for('dashboard'))
 
     venta = Venta.query.get_or_404(venta_id)
-    db.session.delete(venta)
+    venta.estado_transferencia = 'devuelta'
     db.session.commit()
     flash('Acceso al curso quitado exitosamente.')
     return redirect(url_for('admin_dashboard'))
+
+
+@app.route('/activar_acceso/<int:venta_id>', methods=['POST'])
+@login_required
+def activar_acceso(venta_id):
+    if current_user.rol != 'admin':
+        flash('No tienes permiso para realizar esta acción.')
+        return redirect(url_for('dashboard'))
+
+    venta = Venta.query.get_or_404(venta_id)
+    venta.estado_transferencia = 'confirmada'
+    db.session.commit()
+    flash('Acceso al curso activado exitosamente.')
+    return redirect(url_for('admin_dashboard'))
+
+
+@app.route('/admin_dashboard')
+@login_required
+def admin_dashboard():
+    if current_user.rol != 'admin':
+        return redirect(url_for('dashboard'))
+
+    # Obtener las ventas confirmadas del día, semana, mes y año
+    hoy = datetime.utcnow().date()
+    inicio_semana = hoy - timedelta(days=hoy.weekday())
+    inicio_mes = hoy.replace(day=1)
+    inicio_ano = hoy.replace(month=1, day=1)
+
+    ventas_dia = Venta.query.filter(db.func.date(
+        Venta.fecha_venta) == hoy, Venta.estado_transferencia == 'confirmada').all()
+    ventas_semana = Venta.query.filter(db.func.date(
+        Venta.fecha_venta) >= inicio_semana, Venta.estado_transferencia == 'confirmada').all()
+    ventas_mes = Venta.query.filter(db.func.date(
+        Venta.fecha_venta) >= inicio_mes, Venta.estado_transferencia == 'confirmada').all()
+    ventas_ano = Venta.query.filter(db.func.date(
+        Venta.fecha_venta) >= inicio_ano, Venta.estado_transferencia == 'confirmada').all()
+
+    # Calcular el total de ventas confirmadas
+    total_dia = sum(venta.curso.precio for venta in ventas_dia)
+    total_semana = sum(venta.curso.precio for venta in ventas_semana)
+    total_mes = sum(venta.curso.precio for venta in ventas_mes)
+    total_ano = sum(venta.curso.precio for venta in ventas_ano)
+
+    # Obtener los cursos más vendidos
+    cursos_mas_vendidos = db.session.query(
+        Curso.nombre, db.func.count(Venta.id).label('total_ventas')
+    ).join(Venta).filter(Venta.estado_transferencia == 'confirmada').group_by(Curso.id).order_by(db.func.count(Venta.id).desc()).all()
+
+    # Obtener las devoluciones
+    devoluciones = db.session.query(
+        Curso.nombre, db.func.count(Venta.id).label('total_devoluciones')
+    ).join(Venta).filter(Venta.estado_transferencia == 'devuelta').group_by(Curso.id).order_by(db.func.count(Venta.id).desc()).all()
+
+    # Calcular el total de devoluciones
+    total_devoluciones = sum(venta.curso.precio for venta in Venta.query.filter_by(
+        estado_transferencia='devuelta').all())
+
+    # Calcular las ventas netas
+    ventas_netas_dia = total_dia - sum(venta.curso.precio for venta in Venta.query.filter(
+        db.func.date(Venta.fecha_venta) == hoy, Venta.estado_transferencia == 'devuelta').all())
+    ventas_netas_semana = total_semana - sum(venta.curso.precio for venta in Venta.query.filter(
+        db.func.date(Venta.fecha_venta) >= inicio_semana, Venta.estado_transferencia == 'devuelta').all())
+    ventas_netas_mes = total_mes - sum(venta.curso.precio for venta in Venta.query.filter(
+        db.func.date(Venta.fecha_venta) >= inicio_mes, Venta.estado_transferencia == 'devuelta').all())
+    ventas_netas_ano = total_ano - sum(venta.curso.precio for venta in Venta.query.filter(
+        db.func.date(Venta.fecha_venta) >= inicio_ano, Venta.estado_transferencia == 'devuelta').all())
+
+    # Obtener todas las ventas para la gestión de accesos
+    ventas = Venta.query.all()
+
+    return render_template('admin_dashboard.html',
+                           total_dia=total_dia,
+                           total_semana=total_semana,
+                           total_mes=total_mes,
+                           total_ano=total_ano,
+                           cursos_mas_vendidos=cursos_mas_vendidos,
+                           devoluciones=devoluciones,
+                           total_devoluciones=total_devoluciones,
+                           ventas_netas_dia=ventas_netas_dia,
+                           ventas_netas_semana=ventas_netas_semana,
+                           ventas_netas_mes=ventas_netas_mes,
+                           ventas_netas_ano=ventas_netas_ano,
+                           ventas=ventas)
 
 
 with app.app_context():

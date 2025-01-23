@@ -1,0 +1,46 @@
+<!-- filepath: /Users/emerson/Desktop/Todo_Mac/proyectos_python/venta_cursos_pagos/templates/ver_curso.html -->
+{% extends "base.html" %} {% block title %}{{ curso.nombre }}{% endblock %} {%
+block content %}
+<h1>{{ curso.nombre }}</h1>
+<p>{{ curso.descripcion }}</p>
+
+{% if current_user.is_authenticated and current_user.rol == 'admin' %}
+<a href="{{ url_for('nueva_seccion', curso_id=curso.id) }}"
+  >Agregar Nueva Sección</a
+>
+{% endif %}
+
+<h2>Contenido del Curso</h2>
+<ul>
+  {% for seccion in secciones %}
+  <li>
+    <h3>{{ seccion.titulo }}</h3>
+    <p>{{ seccion.descripcion }}</p>
+    {% if seccion.es_gratis or (current_user.is_authenticated and venta) %}
+    <video src="{{ seccion.video_url }}" controls></video>
+    {% else %}
+    <p>
+      Contenido bloqueado.
+      <a href="{{ url_for('comprar_curso', curso_id=curso.id) }}"
+        >Comprar curso</a
+      >
+      para acceder.
+    </p>
+    {% endif %} {% if current_user.is_authenticated and current_user.rol ==
+    'admin' %}
+    <a
+      href="{{ url_for('editar_seccion', curso_id=curso.id, seccion_id=seccion.id) }}"
+      >Editar</a
+    >
+    <form
+      method="POST"
+      action="{{ url_for('eliminar_seccion', curso_id=curso.id, seccion_id=seccion.id) }}"
+      style="display:inline;"
+    >
+      <button type="submit">Eliminar</button>
+    </form>
+    {% endif %}
+  </li>
+  {% endfor %}
+</ul>
+{% endblock %}

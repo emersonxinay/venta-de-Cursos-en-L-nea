@@ -1,0 +1,34 @@
+<!-- filepath: /Users/emerson/Desktop/Todo_Mac/proyectos_python/venta_cursos_pagos/templates/editar_seccion.html -->
+{% extends "base.html" %} {% block title %}Editar Sección{% endblock %} {% block
+content %}
+<h1>Editar Sección</h1>
+<form method="POST">
+  <label for="titulo">Título:</label>
+  <input type="text" name="titulo" value="{{ seccion.titulo }}" required />
+  <br />
+  <label for="descripcion">Descripción:</label>
+  <textarea name="descripcion" required>{{ seccion.descripcion }}</textarea>
+  <br />
+  <label for="video_url">URL del Video:</label>
+  <input
+    type="text"
+    name="video_url"
+    value="{{ seccion.video_url }}"
+    required
+  />
+  <br />
+  <label for="es_gratis">¿Es Gratis?</label>
+  <input
+    type="checkbox"
+    name="es_gratis"
+    {%
+    if
+    seccion.es_gratis
+    %}checked{%
+    endif
+    %}
+  />
+  <br />
+  <button type="submit">Actualizar Sección</button>
+</form>
+{% endblock %}

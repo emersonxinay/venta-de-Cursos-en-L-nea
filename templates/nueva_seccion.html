@@ -1,0 +1,20 @@
+<!-- filepath: /Users/emerson/Desktop/Todo_Mac/proyectos_python/venta_cursos_pagos/templates/nueva_seccion.html -->
+{% extends "base.html" %} {% block title %}Nueva Sección{% endblock %} {% block
+content %}
+<h1>Nueva Sección para {{ curso.nombre }}</h1>
+<form method="POST">
+  <label for="titulo">Título:</label>
+  <input type="text" name="titulo" required />
+  <br />
+  <label for="descripcion">Descripción:</label>
+  <textarea name="descripcion" required></textarea>
+  <br />
+  <label for="video_url">URL del Video:</label>
+  <input type="text" name="video_url" required />
+  <br />
+  <label for="es_gratis">¿Es Gratis?</label>
+  <input type="checkbox" name="es_gratis" />
+  <br />
+  <button type="submit">Crear Sección</button>
+</form>
+{% endblock %}
