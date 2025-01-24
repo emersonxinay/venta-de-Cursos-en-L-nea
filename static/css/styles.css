@@ -13,26 +13,42 @@ header {
   padding: 1rem;
 }
 
+header nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+header nav .logo {
+  font-size: 1.5rem;
+  font-weight: bold;
+}
+
 header nav ul {
   list-style: none;
   padding: 0;
   margin: 0;
   display: flex;
-  justify-content: space-around;
+  flex-wrap: wrap;
+  justify-content: center;
 }
 
 header nav ul li {
-  margin: 0 1rem;
+  margin: 0.5rem;
 }
 
 header nav ul li a {
   color: white;
   text-decoration: none;
   font-weight: bold;
+  padding: 0.5rem 1rem;
+  border-radius: 5px;
+  transition: background 0.3s;
 }
 
 header nav ul li a:hover {
-  text-decoration: underline;
+  background: rgba(255, 255, 255, 0.2);
 }
 
 main {
@@ -47,6 +63,7 @@ footer {
   position: fixed;
   bottom: 0;
   width: 100%;
+  
 }
 
 .flashes {
@@ -106,4 +123,19 @@ select:focus {
   outline: none;
   border-color: #007bff;
   box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
+}
+
+/* Responsive Styles */
+@media (max-width: 768px) {
+  header nav ul {
+    flex-direction: column;
+  }
+
+  main {
+    padding: 1rem;
+  }
+
+  footer {
+    padding: 0.5rem;
+  }
 }

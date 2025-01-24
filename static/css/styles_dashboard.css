@@ -91,3 +91,14 @@ a:hover {
 .card .actions .comprado {
   color: #28a745;
 }
+/* Responsive Styles */
+@media (max-width: 768px) {
+  .cards-container {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .card {
+    width: 90%;
+  }
+}
