@@ -1,6 +1,11 @@
 <!-- filepath: /Users/emerson/Desktop/Todo_Mac/proyectos_python/venta_cursos_pagos/templates/dashboard.html -->
 {% extends "base.html" %} {% block title %}Dashboard{% endblock %} {% block
 content %}
+<link
+  rel="stylesheet"
+  href="{{ url_for('static', filename='css/styles_dashboard.css') }}"
+/>
+
 <h1>Bienvenido al Dashboard</h1>
 
 {% if current_user.is_authenticated and current_user.rol == 'admin' %}
