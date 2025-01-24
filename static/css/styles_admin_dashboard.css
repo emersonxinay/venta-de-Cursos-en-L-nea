@@ -1,0 +1,26 @@
+/* Estilos específicos para el dashboard de administrador */
+h1 {
+  color: #007bff;
+}
+
+ul {
+  list-style: none;
+  padding: 0;
+}
+
+ul li {
+  background: #f8f9fa;
+  margin: 0.5rem 0;
+  padding: 0.5rem;
+  border-radius: 5px;
+  border: 1px solid #ced4da;
+}
+
+ul li a {
+  color: #007bff;
+  text-decoration: none;
+}
+
+ul li a:hover {
+  text-decoration: underline;
+}

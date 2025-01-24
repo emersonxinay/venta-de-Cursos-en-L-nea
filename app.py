@@ -134,6 +134,29 @@ def login():
     return render_template('login.html')
 
 
+@app.route('/editar_usuario/<int:usuario_id>', methods=['GET', 'POST'])
+@login_required
+def editar_usuario(usuario_id):
+    usuario = Usuario.query.get_or_404(usuario_id)
+    if request.method == 'POST':
+        usuario.nombre = request.form['nombre']
+        usuario.correo = request.form['correo']
+        db.session.commit()
+        flash('Usuario actualizado exitosamente.')
+        return redirect(url_for('admin_dashboard'))
+    return render_template('editar_usuario.html', usuario=usuario)
+
+
+@app.route('/eliminar_usuario/<int:usuario_id>', methods=['POST'])
+@login_required
+def eliminar_usuario(usuario_id):
+    usuario = Usuario.query.get_or_404(usuario_id)
+    db.session.delete(usuario)
+    db.session.commit()
+    flash('Usuario eliminado exitosamente.')
+    return redirect(url_for('admin_dashboard'))
+
+
 @app.route('/logout')
 @login_required
 def logout():
@@ -213,31 +236,32 @@ def nuevo_curso():
     return render_template('nuevo_curso.html')
 
 
-@app.route('/editar_curso/<int:id>', methods=['GET', 'POST'])
+@app.route('/editar_curso/<int:curso_id>', methods=['GET', 'POST'])
 @login_required
-def editar_curso(id):
+def editar_curso(curso_id):
     if current_user.rol != 'admin':
         return redirect(url_for('dashboard'))
-    curso = Curso.query.get_or_404(id)
+    curso = Curso.query.get_or_404(curso_id)
     if request.method == 'POST':
         curso.nombre = request.form['nombre']
         curso.descripcion = request.form['descripcion']
         curso.precio = float(request.form['precio'])
         db.session.commit()
-        return redirect(url_for('dashboard'))
+        flash('Curso actualizado exitosamente.')
+        return redirect(url_for('admin_dashboard'))
     return render_template('editar_curso.html', curso=curso)
 
 
-@app.route('/eliminar_curso/<int:id>')
+@app.route('/eliminar_curso/<int:curso_id>', methods=['POST'])
 @login_required
-def eliminar_curso(id):
+def eliminar_curso(curso_id):
     if current_user.rol != 'admin':
         return redirect(url_for('dashboard'))
-    curso = Curso.query.get_or_404(id)
+    curso = Curso.query.get_or_404(curso_id)
     db.session.delete(curso)
     db.session.commit()
     flash('Curso eliminado exitosamente.')
-    return redirect(url_for('dashboard'))
+    return redirect(url_for('admin_dashboard'))
 
 
 @app.route('/comprar/<int:curso_id>', methods=['GET', 'POST'])
@@ -411,6 +435,18 @@ def confirmar_transferencia(venta_id):
     return redirect(url_for('transferencias_pendientes'))
 
 
+@app.route('/rechazar_transferencia/<int:venta_id>', methods=['POST'])
+@login_required
+def rechazar_transferencia(venta_id):
+    if current_user.rol != 'admin':
+        return redirect(url_for('dashboard'))
+    venta = Venta.query.get_or_404(venta_id)
+    venta.estado_transferencia = 'rechazada'
+    db.session.commit()
+    flash('Transferencia rechazada exitosamente.')
+    return redirect(url_for('transferencias_pendientes'))
+
+
 @app.route('/dashboard')
 def dashboard():
     cursos = Curso.query.all()
@@ -510,6 +546,15 @@ def admin_dashboard():
 
     # Obtener todas las ventas para la gestión de accesos
     ventas = Venta.query.all()
+    # Obtener todos los usuarios
+    usuarios = Usuario.query.all()
+
+    # Obtener todos los cursos
+    cursos = Curso.query.all()
+
+    # Obtener las transferencias pendientes
+    transferencias = Venta.query.filter_by(
+        metodo_pago='transferencia', estado_transferencia='pendiente').all()
 
     return render_template('admin_dashboard.html',
                            total_dia=total_dia,
@@ -523,7 +568,10 @@ def admin_dashboard():
                            ventas_netas_semana=ventas_netas_semana,
                            ventas_netas_mes=ventas_netas_mes,
                            ventas_netas_ano=ventas_netas_ano,
-                           ventas=ventas)
+                           ventas=ventas,
+                           usuarios=usuarios,
+                           cursos=cursos,
+                           transferencias=transferencias)
 
 
 with app.app_context():

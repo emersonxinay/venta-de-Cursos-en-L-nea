@@ -1,7 +1,8 @@
+<!-- filepath: /Users/emerson/Desktop/Todo_Mac/proyectos_python/venta_cursos_pagos/templates/editar_curso.html -->
 {% extends "base.html" %} {% block title %}Editar Curso{% endblock %} {% block
 content %}
 <h1>Editar Curso</h1>
-<form method="POST" action="{{ url_for('editar_curso', id=curso.id) }}">
+<form method="POST" action="{{ url_for('editar_curso', curso_id=curso.id) }}">
   <label for="nombre">Nombre:</label>
   <input type="text" name="nombre" value="{{ curso.nombre }}" required />
   <br />

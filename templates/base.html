@@ -7,7 +7,7 @@
     <title>{% block title %}My App{% endblock %}</title>
     <link
       rel="stylesheet"
-      href="{{ url_for('static', filename='styles.css') }}"
+      href="{{ url_for('static', filename='css/styles.css') }}"
     />
     <!-- Incluir Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -25,9 +25,20 @@
               >Transferencias Pendientes</a
             >
           </li>
+          <li>
+            <a href="{{ url_for('admin_dashboard') }}"
+              >Dashboard de Administrador</a
+            >
+          </li>
           {% endif %}
           <li><a href="{{ url_for('logout') }}">Logout</a></li>
-          <li>Bienvenido, {{ current_user.nombre }}</li>
+          <li>
+            Bienvenido, {{ current_user.nombre }} {% if current_user.rol ==
+            'admin' %}
+            <span>Administrador</span>
+            {% endif %}
+          </li>
+
           {% else %}
           <li><a href="{{ url_for('login') }}">Login</a></li>
           <li><a href="{{ url_for('register') }}">Register</a></li>

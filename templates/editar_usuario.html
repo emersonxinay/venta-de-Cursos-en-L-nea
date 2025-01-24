@@ -1,0 +1,17 @@
+<!-- filepath: /Users/emerson/Desktop/Todo_Mac/proyectos_python/venta_cursos_pagos/templates/editar_usuario.html -->
+{% extends "base.html" %} {% block title %}Editar Usuario{% endblock %} {% block
+content %}
+<h1>Editar Usuario</h1>
+<form
+  method="POST"
+  action="{{ url_for('editar_usuario', usuario_id=usuario.id) }}"
+>
+  <label for="nombre">Nombre:</label>
+  <input type="text" name="nombre" value="{{ usuario.nombre }}" required />
+  <br />
+  <label for="correo">Correo:</label>
+  <input type="email" name="correo" value="{{ usuario.correo }}" required />
+  <br />
+  <button type="submit">Actualizar</button>
+</form>
+{% endblock %}

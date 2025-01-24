@@ -11,13 +11,13 @@ content %}
   {% for curso in cursos %}
   <li>
     {{ curso.nombre }} - {{ curso.precio }} USD
-    <a href="{{ url_for('editar_curso', id=curso.id) }}">Editar</a>
-    <a href="{{ url_for('eliminar_curso', id=curso.id) }}">Eliminar</a>
+    <a href="{{ url_for('editar_curso', curso_id=curso.id) }}">Editar</a>
+    <a href="{{ url_for('eliminar_curso', curso_id=curso.id) }}">Eliminar</a>
   </li>
   {% endfor %}
 </ul>
 {% endif %} {% if current_user.is_authenticated %}
-<h2>Mis Compras</h2>
+<h2>Mis cursos Comprado</h2>
 <ul>
   {% for venta in mis_ventas %} {% if venta.estado_transferencia == 'confirmada'
   and venta.fecha_expiracion > current_time %}
@@ -29,7 +29,7 @@ content %}
   {% endif %} {% endfor %}
 </ul>
 
-<h2>Cursos Pendientes de Confirmación</h2>
+<h2>Cursos Pendientes de Confirmación por transferencia</h2>
 <ul>
   {% for venta in mis_ventas %} {% if venta.estado_transferencia == 'pendiente'
   %}
