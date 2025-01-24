@@ -9,60 +9,84 @@ content %}
 <h1>Bienvenido al Dashboard</h1>
 
 {% if current_user.is_authenticated and current_user.rol == 'admin' %}
-<a href="{{ url_for('nuevo_curso') }}">Crear Nuevo Curso</a>
+<a href="{{ url_for('nuevo_curso') }}" class="btn">Crear Nuevo Curso</a>
 <br />
 <h2>Lista de Cursos</h2>
-<ul>
+<div class="cards-container" id="lista-cursos">
   {% for curso in cursos %}
-  <li>
-    {{ curso.nombre }} - {{ curso.precio }} USD
-    <a href="{{ url_for('editar_curso', curso_id=curso.id) }}">Editar</a>
-    <a href="{{ url_for('eliminar_curso', curso_id=curso.id) }}">Eliminar</a>
-  </li>
+  <div class="card">
+    <h3>{{ curso.nombre }}</h3>
+    <p>Precio: {{ curso.precio }} USD</p>
+    <div class="actions">
+      <a href="{{ url_for('editar_curso', curso_id=curso.id) }}" class="btn"
+        >Editar</a
+      >
+      <a href="{{ url_for('eliminar_curso', curso_id=curso.id) }}" class="btn"
+        >Eliminar</a
+      >
+    </div>
+  </div>
   {% endfor %}
-</ul>
+</div>
 {% endif %} {% if current_user.is_authenticated %}
-<h2>Mis cursos Comprado</h2>
-<ul>
+<h2>Mis Cursos Comprados</h2>
+<div class="cards-container" id="mis-cursos-comprados">
   {% for venta in mis_ventas %} {% if venta.estado_transferencia == 'confirmada'
   and venta.fecha_expiracion > current_time %}
-  <li>
-    Curso: {{ venta.curso.nombre }} - Método de Pago: {{ venta.metodo_pago }} -
-    Fecha: {{ venta.fecha_venta }} - Expira: {{ venta.fecha_expiracion }}
-    <a href="{{ url_for('ver_curso', curso_id=venta.curso.id) }}">Ver Curso</a>
-  </li>
+  <div class="card">
+    <h3>{{ venta.curso.nombre }}</h3>
+    <p>Método de Pago: {{ venta.metodo_pago }}</p>
+    <p>Fecha: {{ venta.fecha_venta }}</p>
+    <p>Expira: {{ venta.fecha_expiracion }}</p>
+    <div class="actions">
+      <a href="{{ url_for('ver_curso', curso_id=venta.curso.id) }}" class="btn"
+        >Ver Curso</a
+      >
+    </div>
+  </div>
   {% endif %} {% endfor %}
-</ul>
+</div>
 
-<h2>Cursos Pendientes de Confirmación por transferencia</h2>
-<ul>
+<h2>Cursos Pendientes de Confirmación por Transferencia</h2>
+<div class="cards-container" id="cursos-pendientes">
   {% for venta in mis_ventas %} {% if venta.estado_transferencia == 'pendiente'
   %}
-  <li>
-    Curso: {{ venta.curso.nombre }} - Método de Pago: {{ venta.metodo_pago }} -
-    Fecha: {{ venta.fecha_venta }} - <span>Pendiente de Confirmación</span>
-  </li>
+  <div class="card">
+    <h3>{{ venta.curso.nombre }}</h3>
+    <p>Método de Pago: {{ venta.metodo_pago }}</p>
+    <p>Fecha: {{ venta.fecha_venta }}</p>
+    <div class="actions">
+      <span class="pendiente">Pendiente de Confirmación</span>
+    </div>
+  </div>
   {% endif %} {% endfor %}
-</ul>
+</div>
 {% endif %}
 
 <h2>Cursos Disponibles</h2>
-<ul>
+<div class="cards-container" id="cursos-disponibles">
   {% for curso in cursos %}
-  <li>
-    {{ curso.nombre }} - {{ curso.precio }} USD
-    <a href="{{ url_for('ver_curso', curso_id=curso.id) }}">Ver Detalle</a>
-    {% if current_user.is_authenticated %} {% if curso.id in
-    cursos_comprados_ids %}
-    <span>Ya comprado</span>
-    {% elif curso.id in cursos_pendientes_ids %}
-    <span>Pendiente de Confirmación</span>
-    {% else %}
-    <a href="{{ url_for('comprar_curso', curso_id=curso.id) }}">Comprar</a>
-    {% endif %} {% else %}
-    <span>Inicia sesión para comprar</span>
-    {% endif %}
-  </li>
+  <div class="card">
+    <h3>{{ curso.nombre }}</h3>
+    <p>Precio: {{ curso.precio }} USD</p>
+    <div class="actions">
+      <a href="{{ url_for('ver_curso', curso_id=curso.id) }}" class="btn"
+        >Ver Detalle</a
+      >
+      {% if current_user.is_authenticated %} {% if curso.id in
+      cursos_comprados_ids %}
+      <span class="comprado">Ya comprado</span>
+      {% elif curso.id in cursos_pendientes_ids %}
+      <span class="pendiente">Pendiente de Confirmación</span>
+      {% else %}
+      <a href="{{ url_for('comprar_curso', curso_id=curso.id) }}" class="btn"
+        >Comprar</a
+      >
+      {% endif %} {% else %}
+      <span class="no-session">Inicia sesión para comprar</span>
+      {% endif %}
+    </div>
+  </div>
   {% endfor %}
-</ul>
+</div>
 {% endblock %}

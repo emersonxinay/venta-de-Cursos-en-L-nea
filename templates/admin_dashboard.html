@@ -1,93 +1,118 @@
 <!-- filepath: /Users/emerson/Desktop/Todo_Mac/proyectos_python/venta_cursos_pagos/templates/admin_dashboard.html -->
 {% extends "base.html" %} {% block title %}Dashboard de Administrador{% endblock
 %} {% block content %}
+<link
+  rel="stylesheet"
+  href="{{ url_for('static', filename='css/styles_admin_dashboard.css') }}"
+/>
+
 <h1>Dashboard de Administrador</h1>
 
 <h2>Gestión de Usuarios</h2>
-<ul>
+<div class="cards-container" id="gestion-usuarios">
   {% for usuario in usuarios %}
-  <li>
-    {{ usuario.nombre }} - {{ usuario.correo }}
-    <a href="{{ url_for('editar_usuario', usuario_id=usuario.id) }}">Editar</a>
-    <form
-      method="POST"
-      action="{{ url_for('eliminar_usuario', usuario_id=usuario.id) }}"
-      style="display:inline;"
-    >
-      <button type="submit">Eliminar</button>
-    </form>
-  </li>
+  <div class="card">
+    <h3>{{ usuario.nombre }}</h3>
+    <p>{{ usuario.correo }}</p>
+    <div class="actions">
+      <a
+        href="{{ url_for('editar_usuario', usuario_id=usuario.id) }}"
+        class="btn"
+        >Editar</a
+      >
+      <form
+        method="POST"
+        action="{{ url_for('eliminar_usuario', usuario_id=usuario.id) }}"
+        style="display:inline;"
+      >
+        <button type="submit" class="btn">Eliminar</button>
+      </form>
+    </div>
+  </div>
   {% endfor %}
-</ul>
+</div>
 
 <h2>Gestión de Cursos</h2>
-<ul>
+<div class="cards-container" id="gestion-cursos">
   {% for curso in cursos %}
-  <li>
-    {{ curso.nombre }} - {{ curso.descripcion }}
-    <a href="{{ url_for('editar_curso', curso_id=curso.id) }}">Editar</a>
-    <form
-      method="POST"
-      action="{{ url_for('eliminar_curso', curso_id=curso.id) }}"
-      style="display:inline;"
-    >
-      <button type="submit">Eliminar</button>
-    </form>
-  </li>
+  <div class="card">
+    <h3>{{ curso.nombre }}</h3>
+    <p>{{ curso.descripcion }}</p>
+    <div class="actions">
+      <a href="{{ url_for('editar_curso', curso_id=curso.id) }}" class="btn"
+        >Editar</a
+      >
+      <form
+        method="POST"
+        action="{{ url_for('eliminar_curso', curso_id=curso.id) }}"
+        style="display:inline;"
+      >
+        <button type="submit" class="btn">Eliminar</button>
+      </form>
+    </div>
+  </div>
   {% endfor %}
-</ul>
+</div>
 
 <h2>Transferencias Pendientes</h2>
-<ul>
+<div class="cards-container" id="transferencias-pendientes">
   {% for transferencia in transferencias %}
-  <li>
-    {{ transferencia.usuario.nombre }} - {{ transferencia.curso.nombre }} - {{
-    transferencia.estado }}
-    <form
-      method="POST"
-      action="{{ url_for('confirmar_transferencia', venta_id=transferencia.id) }}"
-      style="display:inline;"
-    >
-      <button type="submit">Aprobar</button>
-    </form>
-    <form
-      method="POST"
-      action="{{ url_for('rechazar_transferencia', venta_id=transferencia.id) }}"
-      style="display:inline;"
-    >
-      <button type="submit">Rechazar</button>
-    </form>
-  </li>
+  <div class="card">
+    <h3>
+      {{ transferencia.usuario.nombre }} - {{ transferencia.curso.nombre }}
+    </h3>
+    <p>Estado: {{ transferencia.estado }}</p>
+    <div class="actions">
+      <form
+        method="POST"
+        action="{{ url_for('confirmar_transferencia', venta_id=transferencia.id) }}"
+        style="display:inline;"
+      >
+        <button type="submit" class="btn">Aprobar</button>
+      </form>
+      <form
+        method="POST"
+        action="{{ url_for('rechazar_transferencia', venta_id=transferencia.id) }}"
+        style="display:inline;"
+      >
+        <button type="submit" class="btn">Rechazar</button>
+      </form>
+    </div>
+  </div>
   {% endfor %}
-</ul>
+</div>
 
 <h2>Gestión de Accesos</h2>
-<ul>
+<div class="cards-container" id="gestion-accesos">
   {% for venta in ventas %}
-  <li>
-    Usuario: {{ venta.usuario.nombre }} - Curso: {{ venta.curso.nombre }} -
-    Fecha: {{ venta.fecha_venta }} {% if venta.estado_transferencia ==
-    'confirmada' %}
-    <form
-      method="POST"
-      action="{{ url_for('quitar_acceso', venta_id=venta.id) }}"
-      style="display:inline;"
-    >
-      <button type="submit">Quitar Acceso</button>
-    </form>
-    {% elif venta.estado_transferencia == 'devuelta' %}
-    <span>Acceso Quitado</span>
-    <form
-      method="POST"
-      action="{{ url_for('activar_acceso', venta_id=venta.id) }}"
-      style="display:inline;"
-    >
-      <button type="submit">Activar Acceso</button>
-    </form>
-    {% endif %}
-  </li>
+  <div class="card">
+    <h3>
+      Usuario: {{ venta.usuario.nombre }} - Curso: {{ venta.curso.nombre }}
+    </h3>
+    <p>Fecha: {{ venta.fecha_venta }}</p>
+    <div class="actions">
+      {% if venta.estado_transferencia == 'confirmada' %}
+      <form
+        method="POST"
+        action="{{ url_for('quitar_acceso', venta_id=venta.id) }}"
+        style="display:inline;"
+      >
+        <button type="submit" class="btn">Quitar Acceso</button>
+      </form>
+      {% elif venta.estado_transferencia == 'devuelta' %}
+      <span>Acceso Quitado</span>
+      <form
+        method="POST"
+        action="{{ url_for('activar_acceso', venta_id=venta.id) }}"
+        style="display:inline;"
+      >
+        <button type="submit" class="btn">Activar Acceso</button>
+      </form>
+      {% endif %}
+    </div>
+  </div>
   {% endfor %}
-</ul>
+</div>
 
 <h2>Ventas Totales</h2>
 <ul>
@@ -97,6 +122,7 @@
   <li>Este Año: {{ total_ano }} USD</li>
 </ul>
 <canvas id="ventasTotalesChart"></canvas>
+
 <h2>Cursos Más Vendidos</h2>
 <ul>
   {% for curso, total_ventas in cursos_mas_vendidos %}
@@ -112,6 +138,7 @@
   {% endfor %}
 </ul>
 <canvas id="devolucionesChart"></canvas>
+
 <h2>Ventas Netas</h2>
 <ul>
   <li>Hoy: {{ ventas_netas_dia }} USD</li>
@@ -120,6 +147,7 @@
   <li>Este Año: {{ ventas_netas_ano }} USD</li>
 </ul>
 <canvas id="ventasNetasChart"></canvas>
+
 <script>
   document.addEventListener('DOMContentLoaded', function() {
       // Datos de ejemplo para ventas totales

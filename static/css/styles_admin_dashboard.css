@@ -1,26 +1,93 @@
-/* Estilos específicos para el dashboard de administrador */
+/* General Styles */
+body {
+  font-family: 'Arial', sans-serif;
+  margin: 0;
+  padding: 0;
+  background: linear-gradient(to right, #f8f9fa, #e9ecef);
+  color: #343a40;
+}
+
 h1 {
   color: #007bff;
+  text-align: center;
+  margin-top: 1rem;
 }
 
-ul {
-  list-style: none;
-  padding: 0;
+h2 {
+  color: #343a40;
+  margin-top: 2rem;
+  text-align: center;
 }
 
-ul li {
-  background: #f8f9fa;
-  margin: 0.5rem 0;
-  padding: 0.5rem;
-  border-radius: 5px;
-  border: 1px solid #ced4da;
-}
-
-ul li a {
+a {
   color: #007bff;
   text-decoration: none;
 }
 
-ul li a:hover {
+a:hover {
   text-decoration: underline;
+}
+
+.cards-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  justify-content: center;
+}
+
+.card {
+  background: linear-gradient(to bottom, #ffffff, #f1f1f1);
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  padding: 1rem;
+  width: 300px;
+  margin: 1rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.card h3 {
+  margin: 0;
+  color: #007bff;
+}
+
+.card p {
+  margin: 0.5rem 0;
+}
+
+.card .actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.card .actions a, .card .actions span {
+  font-weight: bold;
+}
+
+.card .actions .btn {
+  background: linear-gradient(to right, #007bff, #6610f2);
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 5px;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.card .actions .btn:hover {
+  background: linear-gradient(to right, #0056b3, #520dc2);
+}
+
+.card .actions .pendiente {
+  color: #ffc107;
+}
+
+.card .actions .no-session {
+  color: #dc3545;
+}
+
+.card .actions .comprado {
+  color: #28a745;
 }
