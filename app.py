@@ -36,6 +36,7 @@ app_mode = os.getenv('APP_MODE', 'development')
 
 if app_mode == 'production':
     stripe.api_key = os.getenv('STRIPE_API_KEY_LIVE')
+    stripe_publishable_key = os.getenv('STRIPE_PUBLISHABLE_KEY_LIVE')
     paypalrestsdk.configure({
         "mode": "live",
         "client_id": os.getenv('PAYPAL_CLIENT_ID_LIVE'),
@@ -43,6 +44,7 @@ if app_mode == 'production':
     })
 else:
     stripe.api_key = os.getenv('STRIPE_API_KEY_SANDBOX')
+    stripe_publishable_key = os.getenv('STRIPE_PUBLISHABLE_KEY_SANDBOX')
     paypalrestsdk.configure({
         "mode": "sandbox",
         "client_id": os.getenv('PAYPAL_CLIENT_ID_SANDBOX'),
@@ -321,7 +323,10 @@ def comprar_curso(curso_id):
         estado_transferencia = 'confirmada'
 
         if metodo_pago == "stripe":
-            token = request.form['stripeToken']
+            token = request.form.get('stripeToken')
+            if not token:
+                flash('Error en el pago con Stripe: Token no recibido.')
+                return redirect(request.url)
             pago = procesar_pago_stripe(curso.precio, token)
         elif metodo_pago == "paypal":
             return_url = url_for(
@@ -348,7 +353,37 @@ def comprar_curso(curso_id):
             return redirect(url_for('dashboard'))
 
         flash('Error en el pago.')
-    return render_template('comprar_curso.html', curso=curso)
+    return render_template('comprar_curso.html', curso=curso, stripe_publishable_key=stripe_publishable_key)
+
+
+@app.route('/confirmar_pago/<int:curso_id>', methods=['POST'])
+@login_required
+def confirmar_pago(curso_id):
+    curso = Curso.query.get_or_404(curso_id)
+    client_secret = request.form['client_secret']
+    try:
+        intent = stripe.PaymentIntent.confirm(
+            client_secret,
+            payment_method=request.form['payment_method_id']
+        )
+        if intent['status'] == 'succeeded':
+            venta = Venta(
+                usuario_id=current_user.id,
+                curso_id=curso.id,
+                metodo_pago='stripe',
+                estado_transferencia='confirmada',
+                # Ejemplo de duración de 1 año
+                fecha_expiracion=datetime.utcnow() + timedelta(days=365)
+            )
+            db.session.add(venta)
+            db.session.commit()
+            flash('Pago realizado exitosamente.')
+            return redirect(url_for('ver_curso', curso_id=curso.id))
+        else:
+            flash('Error en el pago con Stripe.')
+    except stripe.error.StripeError as e:
+        flash(f"Error en el pago con Stripe: {e.user_message}")
+    return redirect(url_for('comprar_curso', curso_id=curso.id))
 
 
 def procesar_pago_stripe(precio, token):

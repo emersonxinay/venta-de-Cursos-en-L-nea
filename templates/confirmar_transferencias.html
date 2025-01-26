@@ -1,3 +1,4 @@
+<!-- filepath: /Users/emerson/Desktop/Todo_Mac/proyectos_python/venta_cursos_pagos/templates/confirmar_transferencias.html -->
 {% extends "base.html" %} {% block title %}Confirmar Transferencias{% endblock
 %} {% block content %}
 <h1>Confirmar Transferencias</h1>
@@ -11,6 +12,12 @@
       action="{{ url_for('confirmar_transferencia', venta_id=venta.id) }}"
     >
       <button type="submit">Confirmar Transferencia</button>
+    </form>
+    <form
+      method="POST"
+      action="{{ url_for('rechazar_transferencia', venta_id=venta.id) }}"
+    >
+      <button type="submit">Rechazar Transferencia</button>
     </form>
   </li>
   {% endfor %}

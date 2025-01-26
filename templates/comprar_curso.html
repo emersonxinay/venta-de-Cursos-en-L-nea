@@ -1,11 +1,18 @@
+<!-- filepath: /Users/emerson/Desktop/Todo_Mac/proyectos_python/venta_cursos_pagos/templates/comprar_curso.html -->
 {% extends "base.html" %} {% block title %}Comprar Curso{% endblock %} {% block
 content %}
 <h1>Comprar Curso: {{ curso.nombre }}</h1>
 <p>Descripción: {{ curso.descripcion }}</p>
 <p>Precio: {{ curso.precio }} USD</p>
-<form method="POST" action="{{ url_for('comprar_curso', curso_id=curso.id) }}">
+
+<form
+  method="POST"
+  action="{{ url_for('comprar_curso', curso_id=curso.id) }}"
+  id="payment-form"
+>
   <label for="metodo">Método de Pago:</label>
-  <select name="metodo" required>
+  <select name="metodo" id="metodo" required onchange="mostrarFormularioPago()">
+    <option value="">Seleccione un método de pago</option>
     <option value="stripe">Stripe</option>
     <option value="paypal">PayPal</option>
     <option value="transferencia">Transferencia Bancaria</option>
@@ -18,6 +25,64 @@ content %}
     <option value="1_ano">1 Año</option>
   </select>
   <br />
-  <button type="submit">Comprar</button>
+
+  <!-- Formulario de Stripe -->
+  <div id="stripe-form" style="display: none;">
+    <button type="submit">Pagar con Stripe</button>
+  </div>
+
+  <!-- Formulario de PayPal -->
+  <div id="paypal-form" style="display: none;">
+    <button type="submit">Pagar con PayPal</button>
+  </div>
+
+  <!-- Formulario de Transferencia Bancaria -->
+  <div id="transferencia-form" style="display: none;">
+    <button type="submit">Pagar con Transferencia Bancaria</button>
+  </div>
 </form>
+
+<script>
+  function mostrarFormularioPago() {
+    var metodo = document.getElementById('metodo').value;
+    document.getElementById('stripe-form').style.display = 'none';
+    document.getElementById('paypal-form').style.display = 'none';
+    document.getElementById('transferencia-form').style.display = 'none';
+
+    if (metodo === 'stripe') {
+      document.getElementById('stripe-form').style.display = 'block';
+    } else if (metodo === 'paypal') {
+      document.getElementById('paypal-form').style.display = 'block';
+    } else if (metodo === 'transferencia') {
+      document.getElementById('transferencia-form').style.display = 'block';
+    }
+  }
+</script>
+
+<script src="https://checkout.stripe.com/checkout.js"></script>
+<script>
+  var stripe = StripeCheckout.configure({
+    key: "{{ stripe_publishable_key }}",
+    locale: 'auto',
+    token: function(token) {
+      var form = document.getElementById('payment-form');
+      var hiddenInput = document.createElement('input');
+      hiddenInput.setAttribute('type', 'hidden');
+      hiddenInput.setAttribute('name', 'stripeToken');
+      hiddenInput.setAttribute('value', token.id);
+      form.appendChild(hiddenInput);
+      form.submit();
+    }
+  });
+
+  document.querySelector('#stripe-form button').addEventListener('click', function(e) {
+    e.preventDefault();
+    stripe.open({
+      name: 'Compra de Curso',
+      description: '{{ curso.nombre }}',
+      amount: {{ curso.precio * 100 }},
+      currency: 'usd'
+    });
+  });
+</script>
 {% endblock %}

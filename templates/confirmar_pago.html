@@ -1,0 +1,24 @@
+<!-- filepath: /Users/emerson/Desktop/Todo_Mac/proyectos_python/venta_cursos_pagos/templates/confirmar_pago.html -->
+{% extends "base.html" %} {% block title %}Confirmar Pago{% endblock %} {% block
+content %}
+<h1>Confirmar Pago para el Curso: {{ curso.nombre }}</h1>
+<p>Descripción: {{ curso.descripcion }}</p>
+<p>Precio: {{ curso.precio }} USD</p>
+
+<form method="POST" action="{{ url_for('confirmar_pago', curso_id=curso.id) }}">
+  <input type="hidden" name="client_secret" value="{{ client_secret }}" />
+  <label for="card-element">Tarjeta de Crédito o Débito:</label>
+  <div id="card-element">
+    <!-- A Stripe Element will be inserted here. -->
+  </div>
+  <button type="submit">Pagar</button>
+</form>
+
+<script src="https://js.stripe.com/v3/"></script>
+<script>
+  var stripe = Stripe('{{ stripe_publishable_key }}');
+  var elements = stripe.elements();
+  var card = elements.create('card');
+  card.mount('#card-element');
+</script>
+{% endblock %}
