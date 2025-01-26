@@ -19,7 +19,11 @@
   <body>
     <header>
       <nav>
-        <div class="logo">Mi Aplicación</div>
+        <div>
+          <a class="logo" href="{{ url_for('dashboard') }}">CompilandoCode</a>
+          <p>Compra los cursos que necesitas</p>
+        </div>
+
         <ul>
           <li><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
           {% if current_user.is_authenticated %} {% if current_user.rol ==

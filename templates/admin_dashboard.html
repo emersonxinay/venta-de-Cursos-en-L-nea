@@ -38,6 +38,8 @@
   <div class="card">
     <h3>{{ curso.nombre }}</h3>
     <p>{{ curso.descripcion }}</p>
+    <p>{{ curso.precio }}</p>
+
     <div class="actions">
       <a href="{{ url_for('editar_curso', curso_id=curso.id) }}" class="btn"
         >Editar</a
@@ -89,7 +91,8 @@
     <h3>
       Usuario: {{ venta.usuario.nombre }} - Curso: {{ venta.curso.nombre }}
     </h3>
-    <p>Fecha: {{ venta.fecha_venta }}</p>
+    <p>Fecha compra: {{ venta.fecha_venta.strftime('%d-%m-%Y') }}</p>
+    <p>Fecha expiración: {{ venta.fecha_expiracion.strftime('%d-%m-%Y')}}</p>
     <div class="actions">
       {% if venta.estado_transferencia == 'confirmada' %}
       <form

@@ -16,9 +16,15 @@ block content %}
   <li>
     <h3>{{ seccion.titulo }}</h3>
     <p>{{ seccion.descripcion }}</p>
-    {% if seccion.es_gratis or (current_user.is_authenticated and venta) %}
+    {% if seccion.es_gratis or (current_user.is_authenticated and venta) %} {%
+    if seccion.video_url %}
     <video src="{{ seccion.video_url }}" controls></video>
-    {% else %}
+    {% elif seccion.video_file %}
+    <video
+      src="{{ url_for('static', filename=seccion.video_file) }}"
+      controls
+    ></video>
+    {% endif %} {% else %}
     <p>
       Contenido bloqueado.
       <a href="{{ url_for('comprar_curso', curso_id=curso.id) }}"

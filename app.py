@@ -5,6 +5,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, login_required, current_user, logout_user
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime, timedelta
+from werkzeug.utils import secure_filename
 import stripe
 import paypalrestsdk
 from dotenv import load_dotenv
@@ -17,6 +18,9 @@ app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:emerson123@localhost/db_venta_cursos'
 app.config['SECRET_KEY'] = 'mysecret'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config['UPLOAD_FOLDER'] = 'static/uploads'
+app.config['MAX_CONTENT_PATH'] = 16 * 1024 * 1024  # 16 MB
+
 
 db = SQLAlchemy(app)
 
@@ -45,6 +49,9 @@ else:
         "client_secret": os.getenv('PAYPAL_CLIENT_SECRET_SANDBOX')
     })
 
+UPLOAD_FOLDER = 'static/uploads'
+ALLOWED_EXTENSIONS = {'mp4'}
+
 
 class Usuario(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)
@@ -71,6 +78,7 @@ class Seccion(db.Model):
     titulo = db.Column(db.String(100), nullable=False)
     descripcion = db.Column(db.String(500))
     video_url = db.Column(db.String(200))
+    video_file = db.Column(db.String(200))
     curso_id = db.Column(db.Integer, db.ForeignKey('curso.id'), nullable=False)
     es_gratis = db.Column(db.Boolean, default=False)
 
@@ -163,6 +171,13 @@ def logout():
     logout_user()
     return redirect(url_for('login'))
 
+# error de pagina 404
+
+
+@app.errorhandler(404)
+def error_404(e):
+    return render_template('404.html'), 404
+
 
 @app.route('/curso/<int:curso_id>')
 def ver_curso(curso_id):
@@ -175,6 +190,10 @@ def ver_curso(curso_id):
     return render_template('ver_curso.html', curso=curso, secciones=secciones, venta=venta)
 
 
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+
 @app.route('/curso/<int:curso_id>/seccion/nueva', methods=['GET', 'POST'])
 @login_required
 def nueva_seccion(curso_id):
@@ -184,8 +203,16 @@ def nueva_seccion(curso_id):
         descripcion = request.form['descripcion']
         video_url = request.form['video_url']
         es_gratis = 'es_gratis' in request.form
+        video_file = None
+        if 'video_file' in request.files:
+            file = request.files['video_file']
+            if file and allowed_file(file.filename):
+                filename = secure_filename(file.filename)
+                file.save(os.path.join(UPLOAD_FOLDER, filename))
+                video_file = os.path.join(UPLOAD_FOLDER, filename)
+
         seccion = Seccion(titulo=titulo, descripcion=descripcion,
-                          video_url=video_url, curso_id=curso.id, es_gratis=es_gratis)
+                          video_url=video_url, curso_id=curso.id, es_gratis=es_gratis, video_file=video_file)
         db.session.add(seccion)
         db.session.commit()
         flash('Sección creada exitosamente.')
@@ -202,6 +229,13 @@ def editar_seccion(curso_id, seccion_id):
         seccion.descripcion = request.form['descripcion']
         seccion.video_url = request.form['video_url']
         seccion.es_gratis = 'es_gratis' in request.form
+        if 'video_file' in request.files:
+            file = request.files['video_file']
+            if file and allowed_file(file.filename):
+                filename = secure_filename(file.filename)
+                file.save(os.path.join(UPLOAD_FOLDER, filename))
+                seccion.video_file = os.path.join(UPLOAD_FOLDER, filename)
+
         db.session.commit()
         flash('Sección actualizada exitosamente.')
         return redirect(url_for('ver_curso', curso_id=curso_id))
