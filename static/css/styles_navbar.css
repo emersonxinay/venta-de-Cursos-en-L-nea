@@ -1,74 +1,143 @@
-/* General Styles */
-body {
-  font-family: 'Arial', sans-serif;
+/* Reset de márgenes y paddings */
+body, html {
   margin: 0;
   padding: 0;
-  background: linear-gradient(to right, #f8f9fa, #e9ecef);
-  color: #343a40;
+  width: 100%;
+  height: 100%;
+  overflow-x: hidden; /* Evita el desbordamiento horizontal */
 }
 
+/* Estilos generales del header */
 header {
-  background: linear-gradient(to right, #007bff, #6610f2);
+  background: linear-gradient(135deg, #020d71, #42012c); /* Degradado de colores */
   color: white;
-  padding: 1rem 0;
+  width: 100%;
+  box-sizing: border-box; /* Incluye el padding en el ancho total */
 }
 
-header nav {
+/* Barra superior */
+.top-bar {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 0 1rem;
-  flex-wrap: wrap;
+  padding: 1rem;
+  border-radius: 1em;
+
+  background: linear-gradient(135deg, #020d71, #42012c); /* Degradado de colores */
 }
 
-header nav .logo {
+.logo-container .logo {
   font-size: 1.5rem;
   font-weight: bold;
+  text-decoration: none;
+  color: white;
+  padding: 1rem;
 }
 
-header nav ul {
-  list-style: none;
-  padding: 0;
-  margin: 0;
+.user-info {
   display: flex;
-  gap: 1rem;
-  flex-wrap: wrap;
-  justify-content: center;
+  align-items: center;
+  gap: 1rem; /* Espacio entre elementos */
 }
 
-header nav ul li {
-  margin: 0;
-}
-
-header nav ul li a {
+.user-info a {
   color: white;
   text-decoration: none;
-  font-weight: bold;
-  padding: 0.5rem 1rem;
+  font-size: 1rem;
+}
+
+.user-info a:hover {
+  text-decoration: underline;
+}
+
+/* Barra lateral */
+.sidebar {
+  width: 250px; /* Ancho de la barra lateral */
+  height: 100vh; /* Altura completa de la ventana */
+  background: linear-gradient(135deg, #020d71, #42012c); /* Degradado de colores */
+  position: fixed;
+  top: 0;
+  left: -250px; /* Oculta la barra lateral por defecto */
+  transition: left 0.3s ease; /* Animación suave */
+  padding-top: 60px; /* Espacio para la barra superior */
+}
+
+.sidebar.show {
+  left: 0; /* Muestra la barra lateral */
+}
+
+#menu {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+#menu li {
+  padding: 1rem;
+  border-bottom: 1px solid #444;
+  display: flex;
+  align-items: center; /* Centra el texto verticalmente */
+}
+
+#menu li a {
+  color: white;
+  text-decoration: none;
+  font-size: 1rem;
+  width: 100%; /* Ocupa todo el ancho disponible */
+  display: block; /* Hace que el enlace ocupe todo el espacio del li */
+}
+
+#menu li a:hover {
+  text-decoration: underline;
+}
+
+/* Ícono de menú para móviles */
+.menu-toggle {
+  display: flex; /* Mostrar el ícono de menú */
+  flex-direction: column;
+  cursor: pointer;
+  position: fixed;
+  top: 1rem;
+  left: 1rem;
+  z-index: 1000; /* Asegura que esté por encima de otros elementos */
+  background-color: rgba(0, 0, 0, 0.5); /* Fondo semi-transparente */
+  padding: 0.5rem;
   border-radius: 5px;
-  transition: background 0.3s;
 }
 
-header nav ul li a:hover {
-  background: rgba(255, 255, 255, 0.2);
+.menu-toggle span {
+  width: 25px;
+  height: 3px;
+  background-color: white;
+  margin: 4px 0;
 }
 
-header nav ul li span {
-  font-weight: normal;
-  font-size: 0.9rem;
-  color: #f8f9fa;
-}
-
-/* Responsive Styles */
+/* Estilos para dispositivos móviles */
 @media (max-width: 768px) {
-  header nav ul {
-    flex-direction: column;
-    gap: 0.5rem;
+  .sidebar {
+    width: 200px; /* Reducir el ancho en dispositivos móviles */
+    left: -200px; /* Oculta la barra lateral por defecto en móviles */
   }
 
-  header nav .logo {
-    margin-bottom: 1rem;
+  .sidebar.show {
+    left: 0; /* Muestra la barra lateral al hacer clic */
+  }
+
+  .menu-toggle {
+    top: 0.5rem;
+    left: 0.5rem;
+  }
+}
+
+/* Contenido principal */
+.main-content {
+  margin-left: 250px; /* Ajusta el margen para que no se solape con la barra lateral */
+  padding: 1rem;
+
+}
+
+@media (max-width: 768px) {
+  .main-content {
+    margin-left: 0; /* Elimina el margen en dispositivos móviles */
   }
 }

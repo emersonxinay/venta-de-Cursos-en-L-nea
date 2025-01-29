@@ -12,8 +12,20 @@ from dotenv import load_dotenv
 import os
 
 # Cargar variables de entorno desde el archivo .env
-load_dotenv()
+load_dotenv(override=True)
+# Verifica las claves cargadas
+stripe_api_key = os.getenv('STRIPE_API_KEY_SANDBOX')
+stripe_publishable_key = os.getenv('STRIPE_PUBLISHABLE_KEY_SANDBOX')
+api_key = os.getenv('STRIPE_API_KEY_SANDBOX')
+# pruebas apis stripe
+stripe.api_key = os.getenv('STRIPE_API_KEY_SANDBOX')
 
+if not stripe.api_key or stripe.api_key.startswith("sk_test_51M0yk0IFMgUrjyQfSmPGO9NUGEUTzrZ938P1btx1VNbXdRbAvh27UJfWH4KUhy8FKwAFuIxjpVUbmPOzQcOAQw5v00pEIAgp7Q"):
+    raise ValueError("Error: La clave de Stripe no se cargó correctamente.")
+
+print(f"Clave de Stripe usada en código: {stripe.api_key}")
+
+# fin de pruebas api stripe
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:emerson123@localhost/db_venta_cursos'
 app.config['SECRET_KEY'] = 'mysecret'
@@ -50,6 +62,7 @@ else:
         "client_id": os.getenv('PAYPAL_CLIENT_ID_SANDBOX'),
         "client_secret": os.getenv('PAYPAL_CLIENT_SECRET_SANDBOX')
     })
+
 
 UPLOAD_FOLDER = 'static/uploads'
 ALLOWED_EXTENSIONS = {'mp4'}
@@ -304,6 +317,13 @@ def eliminar_curso(curso_id):
 @login_required
 def comprar_curso(curso_id):
     curso = Curso.query.get_or_404(curso_id)
+    # Verificar si el usuario ya ha comprado el curso
+    venta_existente = Venta.query.filter_by(
+        usuario_id=current_user.id, curso_id=curso.id, estado_transferencia='confirmada').first()
+    if venta_existente:
+        flash('Ya has comprado este curso.')
+        return redirect(url_for('ver_curso', curso_id=curso.id))
+
     if request.method == 'POST':
         metodo_pago = request.form['metodo']
         duracion = request.form['duracion']
@@ -323,11 +343,29 @@ def comprar_curso(curso_id):
         estado_transferencia = 'confirmada'
 
         if metodo_pago == "stripe":
-            token = request.form.get('stripeToken')
-            if not token:
-                flash('Error en el pago con Stripe: Token no recibido.')
+            try:
+                session = stripe.checkout.Session.create(
+                    payment_method_types=['card'],
+                    line_items=[{
+                        'price_data': {
+                            'currency': 'usd',
+                            'product_data': {
+                                'name': curso.nombre,
+                            },
+                            'unit_amount': int(curso.precio * 100),
+                        },
+                        'quantity': 1,
+                    }],
+                    mode='payment',
+                    success_url=url_for('stripe_success', curso_id=curso.id,
+                                        _external=True) + '?session_id={CHECKOUT_SESSION_ID}',
+                    cancel_url=url_for(
+                        'stripe_cancel', curso_id=curso.id, _external=True),
+                )
+                return redirect(session.url, code=303)
+            except stripe.error.StripeError as e:
+                flash(f"Error en el pago con Stripe: {e.user_message}")
                 return redirect(request.url)
-            pago = procesar_pago_stripe(curso.precio, token)
         elif metodo_pago == "paypal":
             return_url = url_for(
                 'confirmar_paypal', curso_id=curso.id, duracion=duracion, _external=True)
@@ -398,6 +436,38 @@ def procesar_pago_stripe(precio, token):
     except stripe.error.StripeError as e:
         flash(f"Error en el pago con Stripe: {e.user_message}")
         return False
+
+
+@app.route('/stripe_success/<int:curso_id>')
+@login_required
+def stripe_success(curso_id):
+    curso = Curso.query.get_or_404(curso_id)
+    session_id = request.args.get('session_id')
+    session = stripe.checkout.Session.retrieve(session_id)
+
+    if session.payment_status == 'paid':
+        venta = Venta(
+            usuario_id=current_user.id,
+            curso_id=curso.id,
+            metodo_pago='stripe',
+            estado_transferencia='confirmada',
+            # Ejemplo de duración de 1 año
+            fecha_expiracion=datetime.utcnow() + timedelta(days=365)
+        )
+        db.session.add(venta)
+        db.session.commit()
+        flash('Pago realizado exitosamente.')
+        return redirect(url_for('ver_curso', curso_id=curso.id))
+    else:
+        flash('Error en el pago con Stripe.')
+        return redirect(url_for('comprar_curso', curso_id=curso.id))
+
+
+@app.route('/stripe_cancel/<int:curso_id>')
+@login_required
+def stripe_cancel(curso_id):
+    flash('Pago cancelado.')
+    return redirect(url_for('comprar_curso', curso_id=curso.id))
 
 
 def procesar_pago_paypal(precio, return_url, cancel_url):

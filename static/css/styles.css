@@ -5,6 +5,9 @@ body {
   padding: 0;
   background: linear-gradient(to right, #f8f9fa, #e9ecef);
   color: #343a40;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  min-height: 100vh;
 }
 
 header {

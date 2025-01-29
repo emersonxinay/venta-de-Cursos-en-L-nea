@@ -17,44 +17,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   </head>
   <body>
-    <header>
-      <nav>
-        <div>
-          <a class="logo" href="{{ url_for('dashboard') }}">CompilandoCode</a>
-          <p>Compra los cursos que necesitas</p>
-        </div>
-
-        <ul>
-          <li><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
-          {% if current_user.is_authenticated %} {% if current_user.rol ==
-          'admin' %}
-          <li><a href="{{ url_for('nuevo_curso') }}">Crear Nuevo Curso</a></li>
-          <li>
-            <a href="{{ url_for('transferencias_pendientes') }}"
-              >Transferencias Pendientes</a
-            >
-          </li>
-          <li>
-            <a href="{{ url_for('admin_dashboard') }}"
-              >Dashboard de Administrador</a
-            >
-          </li>
-          {% endif %}
-          <li><a href="{{ url_for('logout') }}">Logout</a></li>
-          <li>
-            Bienvenido, {{ current_user.nombre }} {% if current_user.rol ==
-            'admin' %}
-            <span>Administrador</span>
-            {% endif %}
-          </li>
-          {% else %}
-          <li><a href="{{ url_for('login') }}">Login</a></li>
-          <li><a href="{{ url_for('register') }}">Register</a></li>
-          {% endif %}
-        </ul>
-      </nav>
-    </header>
-
+    {% include "shared/navbar.html" %}
     <main>
       {% with messages = get_flashed_messages(with_categories=true) %} {% if
       messages %}
@@ -66,8 +29,6 @@
       {% endif %} {% endwith %} {% block content %}{% endblock %}
     </main>
 
-    <footer>
-      <p>&copy; 2025 Mi Aplicación</p>
-    </footer>
+    {% include "shared/footer.html" %}
   </body>
 </html>

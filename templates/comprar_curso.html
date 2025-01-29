@@ -5,11 +5,7 @@ content %}
 <p>Descripción: {{ curso.descripcion }}</p>
 <p>Precio: {{ curso.precio }} USD</p>
 
-<form
-  method="POST"
-  action="{{ url_for('comprar_curso', curso_id=curso.id) }}"
-  id="payment-form"
->
+<form method="POST" action="{{ url_for('comprar_curso', curso_id=curso.id) }}">
   <label for="metodo">Método de Pago:</label>
   <select name="metodo" id="metodo" required onchange="mostrarFormularioPago()">
     <option value="">Seleccione un método de pago</option>
@@ -57,32 +53,5 @@ content %}
       document.getElementById('transferencia-form').style.display = 'block';
     }
   }
-</script>
-
-<script src="https://checkout.stripe.com/checkout.js"></script>
-<script>
-  var stripe = StripeCheckout.configure({
-    key: "{{ stripe_publishable_key }}",
-    locale: 'auto',
-    token: function(token) {
-      var form = document.getElementById('payment-form');
-      var hiddenInput = document.createElement('input');
-      hiddenInput.setAttribute('type', 'hidden');
-      hiddenInput.setAttribute('name', 'stripeToken');
-      hiddenInput.setAttribute('value', token.id);
-      form.appendChild(hiddenInput);
-      form.submit();
-    }
-  });
-
-  document.querySelector('#stripe-form button').addEventListener('click', function(e) {
-    e.preventDefault();
-    stripe.open({
-      name: 'Compra de Curso',
-      description: '{{ curso.nombre }}',
-      amount: {{ curso.precio * 100 }},
-      currency: 'usd'
-    });
-  });
 </script>
 {% endblock %}

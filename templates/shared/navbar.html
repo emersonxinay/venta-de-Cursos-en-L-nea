@@ -1,0 +1,49 @@
+<header>
+  <!-- Parte superior: Logo y usuario -->
+  <div class="top-bar">
+    <div class="logo-container">
+      <a class="logo" href="{{ url_for('dashboard') }}">CompilandoCode</a>
+    </div>
+    <div class="user-info">
+      {% if current_user.is_authenticated %}
+      <span>Bienvenido, {{ current_user.nombre }}</span>
+      <a href="{{ url_for('logout') }}">Cerrar sesión</a>
+      {% else %}
+      <a href="{{ url_for('login') }}">Login</a>
+      <a href="{{ url_for('register') }}">Register</a>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Barra lateral: Menú -->
+  <nav class="sidebar" id="sidebar">
+    <div class="menu-toggle" id="menu-toggle">
+      <span></span>
+      <span></span>
+      <span></span>
+    </div>
+    <ul id="menu">
+      <li><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
+      {% if current_user.is_authenticated %} {% if current_user.rol == 'admin'
+      %}
+      <li><a href="{{ url_for('nuevo_curso') }}">Crear Nuevo Curso</a></li>
+      <li>
+        <a href="{{ url_for('transferencias_pendientes') }}"
+          >Transferencias Pendientes</a
+        >
+      </li>
+      <li>
+        <a href="{{ url_for('admin_dashboard') }}"
+          >Dashboard de Administrador</a
+        >
+      </li>
+      {% endif %} {% endif %}
+    </ul>
+  </nav>
+</header>
+
+<script>
+  document.getElementById('menu-toggle').addEventListener('click', function() {
+    document.getElementById('sidebar').classList.toggle('show');
+  });
+</script>
