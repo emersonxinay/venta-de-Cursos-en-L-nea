@@ -126,35 +126,6 @@ def init_app():
 # fin de rutas modularizadas
 
 
-@app.route('/editar_usuario/<int:usuario_id>', methods=['GET', 'POST'])
-@login_required
-def editar_usuario(usuario_id):
-    usuario = Usuario.query.get_or_404(usuario_id)
-    if request.method == 'POST':
-        usuario.nombre = request.form['nombre']
-        usuario.correo = request.form['correo']
-        db.session.commit()
-        flash('Usuario actualizado exitosamente.')
-        return redirect(url_for('admin_dashboard'))
-    return render_template('editar_usuario.html', usuario=usuario)
-
-
-@app.route('/eliminar_usuario/<int:usuario_id>', methods=['POST'])
-@login_required
-def eliminar_usuario(usuario_id):
-    usuario = Usuario.query.get_or_404(usuario_id)
-    db.session.delete(usuario)
-    db.session.commit()
-    flash('Usuario eliminado exitosamente.')
-    return redirect(url_for('admin_dashboard'))
-
-
-@app.route('/logout')
-@login_required
-def logout():
-    logout_user()
-    return redirect(url_for('login'))
-
 # error de pagina 404
 
 

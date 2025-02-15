@@ -1,6 +1,6 @@
 from flask import render_template, redirect, url_for, request, flash
 from werkzeug.security import generate_password_hash, check_password_hash
-from flask_login import login_user
+from flask_login import login_user, login_required, logout_user
 
 
 class AuthRoutes:
@@ -54,3 +54,32 @@ class AuthRoutes:
                     else:
                         flash('Correo o contraseña incorrectos.')
                 return render_template('login.html')
+
+        @self.app.route('/logout')
+        @login_required
+        def logout():
+            logout_user()
+            return redirect(url_for('login'))
+
+        @self.app.route('/editar_usuario/<int:usuario_id>', methods=['GET', 'POST'])
+        @login_required
+        def editar_usuario(usuario_id):
+            with self.flask_app.app_context():
+                usuario = self.Usuario.query.get_or_404(usuario_id)
+                if request.method == 'POST':
+                    usuario.nombre = request.form['nombre']
+                    usuario.correo = request.form['correo']
+                    self.db.session.commit()
+                    flash('Usuario actualizado exitosamente.')
+                    return redirect(url_for('admin_dashboard'))
+                return render_template('editar_usuario.html', usuario=usuario)
+
+        @self.app.route('/eliminar_usuario/<int:usuario_id>', methods=['POST'])
+        @login_required
+        def eliminar_usuario(usuario_id):
+            with self.flask_app.app_context():
+                usuario = self.Usuario.query.get_or_404(usuario_id)
+                self.db.session.delete(usuario)
+                self.db.session.commit()
+                flash('Usuario eliminado exitosamente.')
+                return redirect(url_for('admin_dashboard'))
