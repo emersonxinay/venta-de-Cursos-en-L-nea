@@ -104,3 +104,8 @@ fecha_expiracion: DateTime
 Las contribuciones son bienvenidas. Por favor, abre un issue o un pull request para discutir cualquier cambio que te gustaría hacer.
 
 
+### datos extras
+para sacar la estructura de carpetas y archivos
+```bash
+tree -I "__pycache__|venv" > estructura.txt
+```

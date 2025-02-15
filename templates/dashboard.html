@@ -83,7 +83,9 @@ content %}
         >Comprar</a
       >
       {% endif %} {% else %}
-      <span class="no-session">Inicia sesión para comprar</span>
+      <a href="{{url_for('login')}}" class="btn">
+        <span class="no-session">Inicia sesión para comprar</span>
+      </a>
       {% endif %}
     </div>
   </div>

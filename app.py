@@ -18,12 +18,6 @@ stripe_api_key = os.getenv('STRIPE_API_KEY_SANDBOX')
 stripe_publishable_key = os.getenv('STRIPE_PUBLISHABLE_KEY_SANDBOX')
 api_key = os.getenv('STRIPE_API_KEY_SANDBOX')
 # pruebas apis stripe
-stripe.api_key = os.getenv('STRIPE_API_KEY_SANDBOX')
-
-if not stripe.api_key or stripe.api_key.startswith("sk_test_51M0yk0IFMgUrjyQfSmPGO9NUGEUTzrZ938P1btx1VNbXdRbAvh27UJfWH4KUhy8FKwAFuIxjpVUbmPOzQcOAQw5v00pEIAgp7Q"):
-    raise ValueError("Error: La clave de Stripe no se cargó correctamente.")
-
-print(f"Clave de Stripe usada en código: {stripe.api_key}")
 
 # fin de pruebas api stripe
 app = Flask(__name__)
@@ -110,6 +104,11 @@ class Venta(db.Model):
     fecha_expiracion = db.Column(db.DateTime, nullable=False)
 
 
+globals()['flask_app'] = app
+globals()['db'] = db
+globals()['Usuario'] = Usuario
+
+
 @login_manager.user_loader
 def load_user(user_id):
     return Usuario.query.get(int(user_id))
@@ -120,41 +119,11 @@ def index():
     return redirect(url_for('dashboard'))
 
 
-@app.route('/register', methods=['GET', 'POST'])
-def register():
-    if request.method == 'POST':
-        nombre = request.form['nombre']
-        correo = request.form['correo']
-        contrasena = request.form['contrasena']
-
-        # Verificar si el correo ya existe
-        usuario_existente = Usuario.query.filter_by(correo=correo).first()
-        if usuario_existente:
-            flash('El correo ya está registrado. Por favor, usa otro correo.')
-            return redirect(url_for('register'))
-
-        hashed_password = generate_password_hash(
-            contrasena, method='pbkdf2:sha256')
-        nuevo_usuario = Usuario(
-            nombre=nombre, correo=correo, contrasena=hashed_password, rol='usuario')
-        db.session.add(nuevo_usuario)
-        db.session.commit()
-        flash('Registro exitoso. Ahora puedes iniciar sesión.')
-        return redirect(url_for('login'))
-    return render_template('register.html')
-
-
-@app.route('/login', methods=['GET', 'POST'])
-def login():
-    if request.method == 'POST':
-        usuario = Usuario.query.filter_by(
-            correo=request.form['correo']).first()
-        if usuario and check_password_hash(usuario.contrasena, request.form['contrasena']):
-            login_user(usuario)
-            return redirect(url_for('dashboard'))
-        else:
-            flash('Correo o contraseña incorrectos.')
-    return render_template('login.html')
+# rutas modularizadas
+def init_app():
+    from routes import init_routes
+    init_routes(app)
+# fin de rutas modularizadas
 
 
 @app.route('/editar_usuario/<int:usuario_id>', methods=['GET', 'POST'])
@@ -717,4 +686,5 @@ with app.app_context():
     db.create_all()
 
 if __name__ == "__main__":
+    init_app()
     app.run(debug=True)

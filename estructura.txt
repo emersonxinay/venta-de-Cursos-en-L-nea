@@ -1,0 +1,52 @@
+.
+├── README.md
+├── app.py
+├── config.py
+├── env_ejemplo
+├── estructura.txt
+├── migrations
+│   ├── README
+│   ├── alembic.ini
+│   ├── env.py
+│   ├── script.py.mako
+│   └── versions
+│       ├── 1f301c9fbb48_agregar_fecha_de_expiracion_de_cursos_.py
+│       ├── 97069841ecf3_add_seccion_file_videos.py
+│       ├── a2442f27d56f_agregar_columna_estado_transferencia_a_.py
+│       └── bc4c330e7f20_aumentar_longitud_de_la_columna_.py
+├── models.py
+├── payments.py
+├── roles.py
+├── static
+│   ├── css
+│   │   ├── styles.css
+│   │   ├── styles_admin_dashboard.css
+│   │   ├── styles_dashboard.css
+│   │   └── styles_navbar.css
+│   └── uploads
+├── templates
+│   ├── 404.html
+│   ├── admin_dashboard copy.html
+│   ├── admin_dashboard.html
+│   ├── base copy.html
+│   ├── base.html
+│   ├── comprar_curso.html
+│   ├── confirmar_pago.html
+│   ├── confirmar_transferencias.html
+│   ├── cursos.html
+│   ├── dashboard.html
+│   ├── editar_curso.html
+│   ├── editar_seccion.html
+│   ├── editar_usuario.html
+│   ├── login.html
+│   ├── nueva_seccion.html
+│   ├── nuevo_curso.html
+│   ├── register.html
+│   ├── reportes.html
+│   ├── shared
+│   │   ├── footer.html
+│   │   └── navbar.html
+│   └── ver_curso.html
+└── testeo.py
+
+8 directories, 42 files
