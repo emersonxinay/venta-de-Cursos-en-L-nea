@@ -130,11 +130,6 @@ def init_app():
 # error de pagina 404
 
 
-@app.errorhandler(404)
-def error_404(e):
-    return render_template('404.html'), 404
-
-
 @app.route('/comprar/<int:curso_id>', methods=['GET', 'POST'])
 @login_required
 def comprar_curso(curso_id):
