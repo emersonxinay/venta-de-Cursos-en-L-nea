@@ -1,4 +1,3 @@
-<!-- filepath: /Users/emerson/Desktop/Todo_Mac/proyectos_python/venta_cursos_pagos/templates/admin_dashboard.html -->
 {% extends "base.html" %} {% block title %}Dashboard de Administrador{% endblock
 %} {% block content %}
 <link
@@ -8,270 +7,411 @@
 
 <h1>Dashboard de Administrador</h1>
 
-<h2>Gestión de Usuarios</h2>
-<div class="cards-container" id="gestion-usuarios">
-  {% for usuario in usuarios %}
-  <div class="card">
-    <h3>{{ usuario.nombre }}</h3>
-    <p>{{ usuario.correo }}</p>
-    <div class="actions">
-      <a
-        href="{{ url_for('editar_usuario', usuario_id=usuario.id) }}"
-        class="btn"
-        >Editar</a
-      >
-      <form
-        method="POST"
-        action="{{ url_for('eliminar_usuario', usuario_id=usuario.id) }}"
-        style="display:inline;"
-      >
-        <button type="submit" class="btn">Eliminar</button>
-      </form>
+<section class="dashboard-section">
+  <h2>Gráficas</h2>
+  <div class="dashboard-grid">
+    <!-- Columna 1 -->
+    <div class="card">
+      <h3>Ventas Totales</h3>
+      <ul class="stats-list">
+        <li>Hoy: <span class="total-value">{{ total_dia }} USD</span></li>
+        <li>
+          Esta Semana: <span class="total-value">{{ total_semana }} USD</span>
+        </li>
+        <li>Este Mes: <span class="total-value">{{ total_mes }} USD</span></li>
+        <li>Este Año: <span class="total-value">{{ total_ano }} USD</span></li>
+      </ul>
+      <canvas id="ventasTotalesChart"></canvas>
+    </div>
+
+    <!-- Columna 2 -->
+    <div class="card">
+      <h3>Cursos Más Vendidos</h3>
+      <ul class="stats-list">
+        {% for curso, total_ventas in cursos_mas_vendidos %}
+        <li>
+          {{ curso }}:
+          <span class="total-value">{{ total_ventas }} ventas</span>
+        </li>
+        {% endfor %}
+      </ul>
+      <canvas id="cursosMasVendidosChart"></canvas>
+    </div>
+
+    <!-- Columna 3 -->
+    <div class="card">
+      <h3>Devoluciones</h3>
+      <ul class="stats-list">
+        {% for curso, total_devoluciones in devoluciones %}
+        <li>
+          {{ curso }}:
+          <span class="total-value">{{ total_devoluciones }} devoluciones</span>
+        </li>
+        {% endfor %}
+      </ul>
+      <canvas id="devolucionesChart"></canvas>
+    </div>
+
+    <!-- Fila completa -->
+    <div class="card full-width">
+      <h3>Ventas Netas</h3>
+      <div class="net-sales-grid">
+        <div class="net-sales-item">
+          <h4>Hoy</h4>
+          <p class="total-value">{{ ventas_netas_dia }} USD</p>
+        </div>
+        <div class="net-sales-item">
+          <h4>Esta Semana</h4>
+          <p class="total-value">{{ ventas_netas_semana }} USD</p>
+        </div>
+        <div class="net-sales-item">
+          <h4>Este Mes</h4>
+          <p class="total-value">{{ ventas_netas_mes }} USD</p>
+        </div>
+        <div class="net-sales-item">
+          <h4>Este Año</h4>
+          <p class="total-value">{{ ventas_netas_ano }} USD</p>
+        </div>
+      </div>
+      <canvas id="ventasNetasChart"></canvas>
     </div>
   </div>
-  {% endfor %}
-</div>
+</section>
 
-<h2>Gestión de Cursos</h2>
-<div class="cards-container" id="gestion-cursos">
-  {% for curso in cursos %}
-  <div class="card">
-    <h3>{{ curso.nombre }}</h3>
-    <p>{{ curso.descripcion }}</p>
-    <p>{{ curso.precio }}</p>
+<section class="dashboard-section">
+  <h2>Datos</h2>
 
-    <div class="actions">
-      <a href="{{ url_for('editar_curso', curso_id=curso.id) }}" class="btn"
-        >Editar</a
-      >
-      <form
-        method="POST"
-        action="{{ url_for('eliminar_curso', curso_id=curso.id) }}"
-        style="display:inline;"
-      >
-        <button type="submit" class="btn">Eliminar</button>
-      </form>
+  <!-- Gestión de Cursos -->
+  <div class="table-section">
+    <div class="table-controls">
+      <div class="search-container">
+        <input
+          type="text"
+          id="course-search-input"
+          class="search-input"
+          placeholder="Buscar por nombre, descripción o precio..."
+        />
+        <span class="search-icon">🔍</span>
+      </div>
+    </div>
+
+    <h3>Gestión de Cursos</h3>
+    <div class="table-container">
+      <table class="data-table" id="course-table">
+        <thead>
+          <tr>
+            <th>Nombre</th>
+            <th>Descripción</th>
+            <th>Precio</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for curso in cursos %}
+          <tr
+            data-search="{{ curso.nombre.lower() }} {{ curso.descripcion.lower() }} {{ curso.precio|string }}"
+          >
+            <td>{{ curso.nombre }}</td>
+            <td>{{ curso.descripcion|truncate(100) }}</td>
+            <td class="price-cell">{{ curso.precio }} USD</td>
+            <td class="actions-cell">
+              <a
+                href="{{ url_for('editar_curso', curso_id=curso.id) }}"
+                class="btn btn-edit"
+                >Editar</a
+              >
+              <form
+                method="POST"
+                action="{{ url_for('eliminar_curso', curso_id=curso.id) }}"
+              >
+                <button type="submit" class="btn btn-delete">Eliminar</button>
+              </form>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
     </div>
   </div>
-  {% endfor %}
-</div>
 
-<h2>Transferencias Pendientes</h2>
-<div class="cards-container" id="transferencias-pendientes">
-  {% for transferencia in transferencias %}
-  <div class="card">
-    <h3>
-      {{ transferencia.usuario.nombre }} - {{ transferencia.curso.nombre }}
-    </h3>
-    <p>Estado: {{ transferencia.estado }}</p>
-    <div class="actions">
-      <form
-        method="POST"
-        action="{{ url_for('confirmar_transferencia', venta_id=transferencia.id) }}"
-        style="display:inline;"
-      >
-        <button type="submit" class="btn">Aprobar</button>
-      </form>
-      <form
-        method="POST"
-        action="{{ url_for('rechazar_transferencia', venta_id=transferencia.id) }}"
-        style="display:inline;"
-      >
-        <button type="submit" class="btn">Rechazar</button>
-      </form>
+  <!-- Gestión de Usuarios -->
+  <div class="table-section">
+    <div class="table-controls">
+      <div class="search-container">
+        <input
+          type="text"
+          id="user-search-input"
+          class="search-input"
+          placeholder="Buscar por nombre o correo..."
+        />
+        <span class="search-icon">🔍</span>
+      </div>
+    </div>
+
+    <h3>Gestión de Usuarios</h3>
+    <div class="table-container">
+      <table class="data-table" id="user-table">
+        <thead>
+          <tr>
+            <th>Nombre</th>
+            <th>Correo Electrónico</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for usuario in usuarios %}
+          <tr
+            data-search="{{ usuario.nombre.lower() }} {{ usuario.correo.lower() }}"
+          >
+            <td>{{ usuario.nombre }}</td>
+            <td>{{ usuario.correo }}</td>
+            <td class="actions-cell">
+              <a
+                href="{{ url_for('editar_usuario', usuario_id=usuario.id) }}"
+                class="btn btn-edit"
+                >Editar</a
+              >
+              <form
+                method="POST"
+                action="{{ url_for('eliminar_usuario', usuario_id=usuario.id) }}"
+              >
+                <button type="submit" class="btn btn-delete">Eliminar</button>
+              </form>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
     </div>
   </div>
-  {% endfor %}
-</div>
 
-<h2>Gestión de Accesos</h2>
-<div class="cards-container" id="gestion-accesos">
-  {% for venta in ventas %}
-  <div class="card">
-    <h3>
-      Usuario: {{ venta.usuario.nombre }} - Curso: {{ venta.curso.nombre }}
-    </h3>
-    <p>Fecha compra: {{ venta.fecha_venta.strftime('%d-%m-%Y') }}</p>
-    <p>Fecha expiración: {{ venta.fecha_expiracion.strftime('%d-%m-%Y')}}</p>
-    <div class="actions">
-      {% if venta.estado_transferencia == 'confirmada' %}
-      <form
-        method="POST"
-        action="{{ url_for('quitar_acceso', venta_id=venta.id) }}"
-        style="display:inline;"
-      >
-        <button type="submit" class="btn">Quitar Acceso</button>
-      </form>
-      {% elif venta.estado_transferencia == 'devuelta' %}
-      <span>Acceso Quitado</span>
-      <form
-        method="POST"
-        action="{{ url_for('activar_acceso', venta_id=venta.id) }}"
-        style="display:inline;"
-      >
-        <button type="submit" class="btn">Activar Acceso</button>
-      </form>
-      {% endif %}
+  <!-- Transferencias Pendientes -->
+  <div class="card-section">
+    <h3>Transferencias Pendientes</h3>
+    <div class="cards-container">
+      {% for transferencia in transferencias %}
+      <div class="card">
+        <h4>
+          {{ transferencia.usuario.nombre }} - {{ transferencia.curso.nombre }}
+        </h4>
+        <p>
+          Estado:
+          <span class="status-badge status-{{ transferencia.estado }}"
+            >{{ transferencia.estado }}</span
+          >
+        </p>
+        <div class="actions">
+          <form
+            method="POST"
+            action="{{ url_for('confirmar_transferencia', venta_id=transferencia.id) }}"
+          >
+            <button type="submit" class="btn btn-success">Aprobar</button>
+          </form>
+          <form
+            method="POST"
+            action="{{ url_for('rechazar_transferencia', venta_id=transferencia.id) }}"
+          >
+            <button type="submit" class="btn btn-danger">Rechazar</button>
+          </form>
+        </div>
+      </div>
+      {% endfor %}
     </div>
   </div>
-  {% endfor %}
-</div>
 
-<h2>Ventas Totales</h2>
-<ul>
-  <li>Hoy: {{ total_dia }} USD</li>
-  <li>Esta Semana: {{ total_semana }} USD</li>
-  <li>Este Mes: {{ total_mes }} USD</li>
-  <li>Este Año: {{ total_ano }} USD</li>
-</ul>
-<canvas id="ventasTotalesChart"></canvas>
+  <!-- Gestión de Accesos -->
+  <div class="table-section">
+    <div class="table-controls">
+      <div class="search-container">
+        <input
+          type="text"
+          id="access-search-input"
+          class="search-input"
+          placeholder="Buscar por usuario, curso, estado o fecha..."
+        />
+        <span class="search-icon">🔍</span>
+      </div>
+    </div>
 
-<h2>Cursos Más Vendidos</h2>
-<ul>
-  {% for curso, total_ventas in cursos_mas_vendidos %}
-  <li>{{ curso }} - {{ total_ventas }} ventas</li>
-  {% endfor %}
-</ul>
-<canvas id="cursosMasVendidosChart"></canvas>
-
-<h2>Devoluciones</h2>
-<ul>
-  {% for curso, total_devoluciones in devoluciones %}
-  <li>{{ curso }} - {{ total_devoluciones }} devoluciones</li>
-  {% endfor %}
-</ul>
-<canvas id="devolucionesChart"></canvas>
-
-<h2>Ventas Netas</h2>
-<ul>
-  <li>Hoy: {{ ventas_netas_dia }} USD</li>
-  <li>Esta Semana: {{ ventas_netas_semana }} USD</li>
-  <li>Este Mes: {{ ventas_netas_mes }} USD</li>
-  <li>Este Año: {{ ventas_netas_ano }} USD</li>
-</ul>
-<canvas id="ventasNetasChart"></canvas>
+    <h3>Gestión de Accesos</h3>
+    <div class="table-container">
+      <table class="data-table" id="access-table">
+        <thead>
+          <tr>
+            <th>Usuario</th>
+            <th>Curso</th>
+            <th>Fecha Compra</th>
+            <th>Fecha Expiración</th>
+            <th>Estado</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for venta in ventas %}
+          <tr
+            data-search="{{ venta.usuario.nombre.lower() }} {{ venta.curso.nombre.lower() }} {% if venta.estado_transferencia == 'confirmada' %}activo{% elif venta.estado_transferencia == 'devuelta' %}inactivo{% endif %} {{ venta.fecha_venta.strftime('%d-%m-%Y') }} {{ venta.fecha_expiracion.strftime('%d-%m-%Y') }}"
+          >
+            <td>{{ venta.usuario.nombre }}</td>
+            <td>{{ venta.curso.nombre }}</td>
+            <td>{{ venta.fecha_venta.strftime('%d-%m-%Y') }}</td>
+            <td>{{ venta.fecha_expiracion.strftime('%d-%m-%Y') }}</td>
+            <td>
+              {% if venta.estado_transferencia == 'confirmada' %}
+              <span class="status-badge status-active">Activo</span>
+              {% elif venta.estado_transferencia == 'devuelta' %}
+              <span class="status-badge status-inactive">Inactivo</span>
+              {% endif %}
+            </td>
+            <td class="actions-cell">
+              {% if venta.estado_transferencia == 'confirmada' %}
+              <form
+                method="POST"
+                action="{{ url_for('quitar_acceso', venta_id=venta.id) }}"
+              >
+                <button type="submit" class="btn btn-warning">
+                  Quitar Acceso
+                </button>
+              </form>
+              {% elif venta.estado_transferencia == 'devuelta' %}
+              <form
+                method="POST"
+                action="{{ url_for('activar_acceso', venta_id=venta.id) }}"
+              >
+                <button type="submit" class="btn btn-success">
+                  Activar Acceso
+                </button>
+              </form>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
 
 <script>
+  // Función genérica para búsqueda
+  function setupSearch(inputId, tableId) {
+    const searchInput = document.getElementById(inputId);
+    const table = document.getElementById(tableId);
+    const rows = table.querySelectorAll('tbody tr');
+
+    const normalizeText = (text) => {
+      return text.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+    };
+
+    searchInput.addEventListener('input', function() {
+      const searchTerm = normalizeText(this.value);
+
+      rows.forEach(function(row) {
+        const searchText = normalizeText(row.getAttribute('data-search'));
+        row.style.display = searchTerm === '' || searchText.includes(searchTerm) ? '' : 'none';
+      });
+    });
+  }
+
+  // Configurar buscadores
   document.addEventListener('DOMContentLoaded', function() {
-      // Datos de ejemplo para ventas totales
-      const ventasTotalesData = {
+    setupSearch('course-search-input', 'course-table');
+    setupSearch('user-search-input', 'user-table');
+    setupSearch('access-search-input', 'access-table');
+
+    // Configuración de gráficos
+    const chartsConfig = [
+      {
+        id: 'ventasTotalesChart',
+        type: 'bar',
+        data: {
           labels: ['Hoy', 'Esta Semana', 'Este Mes', 'Este Año'],
           datasets: [{
-              label: 'Ventas Totales',
-              data: [{{ total_dia }}, {{ total_semana }}, {{ total_mes }}, {{ total_ano }}],
-              backgroundColor: [
-                  'rgba(75, 192, 192, 0.2)',
-                  'rgba(54, 162, 235, 0.2)',
-                  'rgba(255, 206, 86, 0.2)',
-                  'rgba(153, 102, 255, 0.2)'
-              ],
-              borderColor: [
-                  'rgba(75, 192, 192, 1)',
-                  'rgba(54, 162, 235, 1)',
-                  'rgba(255, 206, 86, 1)',
-                  'rgba(153, 102, 255, 1)'
-              ],
-              borderWidth: 1
+            label: 'Ventas Totales',
+            data: [{{ total_dia }}, {{ total_semana }}, {{ total_mes }}, {{ total_ano }}],
+            backgroundColor: [
+              'rgba(75, 192, 192, 0.2)',
+              'rgba(54, 162, 235, 0.2)',
+              'rgba(255, 206, 86, 0.2)',
+              'rgba(153, 102, 255, 0.2)'
+            ],
+            borderColor: [
+              'rgba(75, 192, 192, 1)',
+              'rgba(54, 162, 235, 1)',
+              'rgba(255, 206, 86, 1)',
+              'rgba(153, 102, 255, 1)'
+            ],
+            borderWidth: 1
           }]
-      };
-
-      const ctxVentasTotales = document.getElementById('ventasTotalesChart').getContext('2d');
-      new Chart(ctxVentasTotales, {
-          type: 'bar',
-          data: ventasTotalesData,
-          options: {
-              scales: {
-                  y: {
-                      beginAtZero: true
-                  }
-              }
-          }
-      });
-
-      // Datos de ejemplo para cursos más vendidos
-      const cursosMasVendidosData = {
+        }
+      },
+      {
+        id: 'cursosMasVendidosChart',
+        type: 'bar',
+        data: {
           labels: [{% for curso, total_ventas in cursos_mas_vendidos %}'{{ curso }}',{% endfor %}],
           datasets: [{
-              label: 'Cursos Más Vendidos',
-              data: [{% for curso, total_ventas in cursos_mas_vendidos %}{{ total_ventas }},{% endfor %}],
-              backgroundColor: 'rgba(54, 162, 235, 0.2)',
-              borderColor: 'rgba(54, 162, 235, 1)',
-              borderWidth: 1
+            label: 'Cursos Más Vendidos',
+            data: [{% for curso, total_ventas in cursos_mas_vendidos %}{{ total_ventas }},{% endfor %}],
+            backgroundColor: 'rgba(54, 162, 235, 0.2)',
+            borderColor: 'rgba(54, 162, 235, 1)',
+            borderWidth: 1
           }]
-      };
-
-      const ctxCursosMasVendidos = document.getElementById('cursosMasVendidosChart').getContext('2d');
-      new Chart(ctxCursosMasVendidos, {
-          type: 'bar',
-          data: cursosMasVendidosData,
-          options: {
-              scales: {
-                  y: {
-                      beginAtZero: true
-                  }
-              }
-          }
-      });
-
-      // Datos de ejemplo para devoluciones
-      const devolucionesData = {
+        }
+      },
+      {
+        id: 'devolucionesChart',
+        type: 'bar',
+        data: {
           labels: [{% for curso, total_devoluciones in devoluciones %}'{{ curso }}',{% endfor %}],
           datasets: [{
-              label: 'Devoluciones',
-              data: [{% for curso, total_devoluciones in devoluciones %}{{ total_devoluciones }},{% endfor %}],
-              backgroundColor: 'rgba(255, 99, 132, 0.2)',
-              borderColor: 'rgba(255, 99, 132, 1)',
-              borderWidth: 1
+            label: 'Devoluciones',
+            data: [{% for curso, total_devoluciones in devoluciones %}{{ total_devoluciones }},{% endfor %}],
+            backgroundColor: 'rgba(255, 99, 132, 0.2)',
+            borderColor: 'rgba(255, 99, 132, 1)',
+            borderWidth: 1
           }]
-      };
-
-      const ctxDevoluciones = document.getElementById('devolucionesChart').getContext('2d');
-      new Chart(ctxDevoluciones, {
-          type: 'bar',
-          data: devolucionesData,
-          options: {
-              scales: {
-                  y: {
-                      beginAtZero: true
-                  }
-              }
-          }
-      });
-
-      // Datos de ejemplo para ventas netas
-      const ventasNetasData = {
+        }
+      },
+      {
+        id: 'ventasNetasChart',
+        type: 'bar',
+        data: {
           labels: ['Hoy', 'Esta Semana', 'Este Mes', 'Este Año'],
           datasets: [{
-              label: 'Ventas Netas',
-              data: [{{ ventas_netas_dia }}, {{ ventas_netas_semana }}, {{ ventas_netas_mes }}, {{ ventas_netas_ano }}],
-              backgroundColor: [
-                  'rgba(75, 192, 192, 0.2)',
-                  'rgba(54, 162, 235, 0.2)',
-                  'rgba(255, 206, 86, 0.2)',
-                  'rgba(153, 102, 255, 0.2)'
-              ],
-              borderColor: [
-                  'rgba(75, 192, 192, 1)',
-                  'rgba(54, 162, 235, 1)',
-                  'rgba(255, 206, 86, 1)',
-                  'rgba(153, 102, 255, 1)'
-              ],
-              borderWidth: 1
+            label: 'Ventas Netas',
+            data: [{{ ventas_netas_dia }}, {{ ventas_netas_semana }}, {{ ventas_netas_mes }}, {{ ventas_netas_ano }}],
+            backgroundColor: [
+              'rgba(75, 192, 192, 0.2)',
+              'rgba(54, 162, 235, 0.2)',
+              'rgba(255, 206, 86, 0.2)',
+              'rgba(153, 102, 255, 0.2)'
+            ],
+            borderColor: [
+              'rgba(75, 192, 192, 1)',
+              'rgba(54, 162, 235, 1)',
+              'rgba(255, 206, 86, 1)',
+              'rgba(153, 102, 255, 1)'
+            ],
+            borderWidth: 1
           }]
-      };
+        }
+      }
+    ];
 
-      const ctxVentasNetas = document.getElementById('ventasNetasChart').getContext('2d');
-      new Chart(ctxVentasNetas, {
-          type: 'bar',
-          data: ventasNetasData,
-          options: {
-              scales: {
-                  y: {
-                      beginAtZero: true
-                  }
-              }
+    chartsConfig.forEach(config => {
+      const ctx = document.getElementById(config.id).getContext('2d');
+      new Chart(ctx, {
+        type: config.type,
+        data: config.data,
+        options: {
+          scales: {
+            y: {
+              beginAtZero: true
+            }
           }
+        }
       });
+    });
   });
 </script>
 {% endblock %}
