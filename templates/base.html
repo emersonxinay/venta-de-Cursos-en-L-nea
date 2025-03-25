@@ -4,7 +4,20 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>{% block title %}My App{% endblock %}</title>
+    <title>{% block title %}Cursos Online -CompilandoCode{% endblock %}</title>
+
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/lite-youtube-embed@0.2.0/src/lite-yt-embed.css"
+    />
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/styles_dashboard.css') }}"
+    />
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/styles_ver_curso.css') }}"
+    />
     <link
       rel="stylesheet"
       href="{{ url_for('static', filename='css/styles_navbar.css') }}"
@@ -13,6 +26,7 @@
       href="{{ url_for('static', filename='css/styles.css') }}"
       rel="stylesheet"
     />
+
     <!-- Incluir Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   </head>
@@ -30,5 +44,17 @@
     </main>
 
     {% include "shared/footer.html" %}
+
+    <meta name="csrf-token" content="{{ csrf_token() }}" />
+
+    <!-- Cdn script para ver youtube -->
+    <!-- Agrega el JS de lite-youtube-embed -->
+    <script src="https://cdn.jsdelivr.net/npm/lite-youtube-embed@0.2.0/src/lite-yt-embed.js"></script>
+
+    <!-- Player API de YouTube -->
+    <script src="https://www.youtube.com/iframe_api"></script>
+
+    <!-- Player API de Vimeo -->
+    <script src="https://player.vimeo.com/api/player.js"></script>
   </body>
 </html>

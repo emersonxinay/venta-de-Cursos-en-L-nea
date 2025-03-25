@@ -1,15 +1,18 @@
 from datetime import datetime
 from flask_migrate import Migrate
-from flask import Flask, render_template, redirect, url_for, request, flash
+from flask import Flask, jsonify, render_template, redirect, url_for, request, flash
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, login_required, current_user, logout_user
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime, timedelta
 from werkzeug.utils import secure_filename
+from flask_wtf.csrf import CSRFProtect
 import stripe
 import paypalrestsdk
 from dotenv import load_dotenv
 import os
+
+from models import Certificado, HistoricoProgreso, ProgresoUsuario
 
 # Cargar variables de entorno desde el archivo .env
 load_dotenv(override=True)
@@ -26,13 +29,13 @@ app.config['SECRET_KEY'] = 'mysecret'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['UPLOAD_FOLDER'] = 'static/uploads'
 app.config['MAX_CONTENT_PATH'] = 16 * 1024 * 1024  # 16 MB
+csrf = CSRFProtect(app)
 
 
 db = SQLAlchemy(app)
 
 login_manager = LoginManager(app)
 login_manager.login_view = 'login'
-
 
 # Después de inicializar db
 migrate = Migrate(app, db)
@@ -114,11 +117,6 @@ def load_user(user_id):
     return Usuario.query.get(int(user_id))
 
 
-@app.route('/')
-def index():
-    return redirect(url_for('dashboard'))
-
-
 # rutas modularizadas
 def init_app():
     from routes import init_routes
@@ -126,7 +124,170 @@ def init_app():
 
 # fin de rutas modularizadas
 
+# inicio de vistas de cursos, progreso y certificado
 
+
+@app.route('/actualizar_progreso_seccion', methods=['POST'])
+@login_required
+def actualizar_progreso_seccion():
+    try:
+        data = request.get_json()
+        seccion_id = data.get('seccion_id')
+        curso_id = data.get('curso_id')
+        # Procesamiento seguro del porcentaje
+        porcentaje_raw = data.get('porcentaje')
+        try:
+            porcentaje = int(float(porcentaje_raw)) if porcentaje_raw not in [
+                None, ''] else 0
+            porcentaje = min(100, max(0, porcentaje))
+        except (ValueError, TypeError):
+            porcentaje = 0
+        if not all([seccion_id, curso_id]):
+            return jsonify({'success': False, 'error': 'Datos incompletos'}), 400
+        # Verificar que la sección pertenezca al curso
+        seccion = Seccion.query.filter_by(
+            id=seccion_id, curso_id=curso_id).first()
+        if not seccion:
+            return jsonify({'success': False, 'error': 'Sección no encontrada'}), 404
+        # Buscar o crear registro de progreso
+        progreso = ProgresoUsuario.query.filter_by(
+            usuario_id=current_user.id,
+            seccion_id=seccion_id
+        ).first()
+
+        if not progreso:
+            progreso = ProgresoUsuario(
+                usuario_id=current_user.id,
+                seccion_id=seccion_id,
+                curso_id=curso_id,
+                progreso=porcentaje,
+                completado=(porcentaje >= 95),
+                ultima_actualizacion=datetime.utcnow()
+            )
+            db.session.add(progreso)
+        else:
+            progreso.progreso = porcentaje
+            if porcentaje >= 95:
+                progreso.completado = True
+                progreso.fecha_completado = datetime.utcnow()
+            progreso.ultima_actualizacion = datetime.utcnow()
+
+        # Registrar en histórico
+        historico = HistoricoProgreso(
+            progreso_id=progreso.id,
+            progreso_anterior=progreso.progreso,
+            progreso_nuevo=porcentaje,
+            fecha_cambio=datetime.utcnow(),
+            tipo_cambio='actualizacion'
+        )
+        db.session.add(historico)
+
+        db.session.commit()
+
+        # Calcular progreso del curso completo
+        progreso_curso = calcular_progreso_curso(curso_id, current_user.id)
+
+        # Verificar si se completó todo el curso
+        if progreso_curso >= 100:
+            verificar_curso_completado(curso_id, current_user.id)
+
+        return jsonify({
+            'success': True,
+            'progreso_curso': progreso_curso,
+            'seccion_completada': progreso.completado
+        })
+    except Exception as e:
+        db.session.rollback()
+        app.logger.error(f"Error actualizando progreso: {str(e)}")
+        return jsonify({'success': False, 'error': 'Error interno del servidor'}), 500
+
+
+def calcular_progreso_curso(curso_id, usuario_id):
+    curso = Curso.query.get_or_404(curso_id)
+    secciones_ids = [s.id for s in curso.secciones]
+
+    # Obtener todas las secciones del curso
+    total_secciones = len(secciones_ids)
+    if total_secciones == 0:
+        return 0
+
+    # Obtener progresos del usuario para este curso
+    progresos = ProgresoUsuario.query.filter(
+        ProgresoUsuario.usuario_id == usuario_id,
+        ProgresoUsuario.seccion_id.in_(secciones_ids)
+    ).all()
+
+    # Calcular progreso ponderado
+    suma_progresos = sum(p.progreso for p in progresos)
+    progreso_curso = (suma_progresos / total_secciones)
+
+    return min(100, round(progreso_curso, 2))
+
+
+def verificar_curso_completado(curso_id, usuario_id):
+    curso = Curso.query.get_or_404(curso_id)
+    secciones_ids = [s.id for s in curso.secciones]
+
+    progresos = ProgresoUsuario.query.filter(
+        ProgresoUsuario.usuario_id == usuario_id,
+        ProgresoUsuario.seccion_id.in_(secciones_ids)
+    ).all()
+
+    todas_completadas = all(p.completado for p in progresos)
+
+    if todas_completadas:
+        # Crear certificado si no existe
+        certificado = Certificado.query.filter_by(
+            usuario_id=usuario_id,
+            curso_id=curso_id
+        ).first()
+
+        if not certificado:
+            codigo = f"CERT-{curso_id}-{usuario_id}-{datetime.now().strftime('%Y%m%d')}"
+            certificado = Certificado(
+                usuario_id=usuario_id,
+                curso_id=curso_id,
+                codigo=codigo,
+                fecha_emision=datetime.utcnow(),
+                fecha_completado=datetime.utcnow(),
+                valido=True
+            )
+            db.session.add(certificado)
+            db.session.commit()
+
+
+@app.route('/get_progreso_curso')
+@login_required
+def get_progreso_curso():
+    curso_id = request.args.get('curso_id')
+    if not curso_id:
+        return jsonify({'success': False, 'error': 'curso_id requerido'}), 400
+
+    # Obtener todas las secciones del curso con su progreso
+    secciones = db.session.query(
+        Seccion.id,
+        ProgresoUsuario.progreso,
+        ProgresoUsuario.tiempo_total_visto
+    ).outerjoin(
+        ProgresoUsuario,
+        (ProgresoUsuario.seccion_id == Seccion.id) &
+        (ProgresoUsuario.usuario_id == current_user.id)
+    ).filter(
+        Seccion.curso_id == curso_id
+    ).all()
+
+    # Calcular progreso general del curso
+    progreso_curso = calcular_progreso_curso(curso_id, current_user.id)
+
+    return jsonify({
+        'success': True,
+        'progreso_curso': progreso_curso,
+        'secciones': [{
+            'id': s.id,
+            'progreso': float(s.progreso) if s.progreso else 0,
+            'tiempo_visto': s.tiempo_total_visto if s.tiempo_total_visto else 0
+        } for s in secciones]
+    })
 # error de pagina 404
 
 
@@ -284,7 +445,7 @@ def stripe_success(curso_id):
 @login_required
 def stripe_cancel(curso_id):
     flash('Pago cancelado.')
-    return redirect(url_for('comprar_curso', curso_id=curso.id))
+    return redirect(url_for('comprar_curso', curso_id=Curso.id))
 
 
 def procesar_pago_paypal(precio, return_url, cancel_url):

@@ -1,150 +1,209 @@
 {% extends "base.html" %} {% block title %}Dashboard{% endblock %} {% block
 content %}
-<link
-  rel="stylesheet"
-  href="{{ url_for('static', filename='css/styles_dashboard.css') }}"
-/>
+<div id="db-main-container" class="db-container">
+  <header class="db-header">
+    <h1 id="db-main-title" class="db-title">Tú portal de cursos</h1>
 
-<h1>Bienvenido al Dashboard</h1>
+    <!-- Búsqueda global -->
+    <div id="db-global-search" class="db-search-container">
+      <input
+        type="text"
+        id="db-search-input"
+        class="db-search-input"
+        placeholder="Buscar en todos los cursos..."
+        aria-label="Buscar cursos"
+      />
+      <span class="db-search-icon">
+        <i class="fas fa-search"></i>
+      </span>
+    </div>
+  </header>
 
-<!-- Sección de búsqueda global -->
-<div class="search-global-container">
-  <input
-    type="text"
-    id="global-search-input"
-    class="search-input"
-    placeholder="Buscar en todos los cursos..."
-  />
-  <span class="search-icon">🔍</span>
+  {% if current_user.is_authenticated and current_user.rol == 'admin' %}
+  <section id="db-admin-section" class="db-section">
+    <div class="db-section-header">
+      <h2 class="db-section-title">Administración de Cursos</h2>
+      <a
+        href="{{ url_for('nuevo_curso') }}"
+        class="db-btn db-btn-primary db-btn-icon"
+      >
+        <i class="fas fa-plus"></i> Crear Nuevo Curso
+      </a>
+    </div>
+
+    <div class="db-table-wrapper">
+      <table id="db-admin-table" class="db-data-table">
+        <thead>
+          <tr class="db-table-header-row">
+            <th class="db-table-head db-col-name">Nombre</th>
+            <th class="db-table-head db-col-price">Precio</th>
+            <th class="db-table-head db-col-actions">Acciones</th>
+          </tr>
+        </thead>
+        <tbody class="db-table-body">
+          {% for curso in cursos %}
+          <tr
+            class="db-table-row"
+            data-search="{{ curso.nombre.lower() }} {{ curso.precio|string }}"
+          >
+            <td class="db-table-cell db-cell-name">{{ curso.nombre }}</td>
+            <td class="db-table-cell db-cell-price">{{ curso.precio }} USD</td>
+            <td class="db-table-cell db-cell-actions">
+              <div class="db-action-btns">
+                <a
+                  href="{{ url_for('editar_curso', curso_id=curso.id) }}"
+                  class="db-btn db-btn-edit db-btn-sm"
+                >
+                  <i class="fas fa-edit"></i> Editar
+                </a>
+                <a
+                  href="{{ url_for('eliminar_curso', curso_id=curso.id) }}"
+                  class="db-btn db-btn-delete db-btn-sm"
+                >
+                  <i class="fas fa-trash-alt"></i> Eliminar
+                </a>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+  {% endif %} {% if current_user.is_authenticated %}
+  <section id="db-my-courses" class="db-section">
+    <h2 class="db-section-title">Mis Cursos Comprados</h2>
+    <div id="db-purchased-courses" class="db-cards-grid">
+      {% for venta in mis_ventas %} {% if venta.estado_transferencia ==
+      'confirmada' and venta.fecha_expiracion > current_time %}
+      <div
+        class="db-course-card"
+        data-search="{{ venta.curso.nombre.lower() }} {{ venta.metodo_pago.lower() }} {{ venta.fecha_venta.strftime('%d-%m-%Y') }}"
+      >
+        <div class="db-card-header">
+          <h3 class="db-card-title">{{ venta.curso.nombre }}</h3>
+          <span class="db-card-meta db-payment-method"
+            >{{ venta.metodo_pago }}</span
+          >
+        </div>
+        <div class="db-card-body">
+          <div class="db-card-dates">
+            <div class="db-date-item">
+              <span class="db-date-label">Compra:</span>
+              <span class="db-date-value"
+                >{{ venta.fecha_venta.strftime('%d-%m-%Y') }}</span
+              >
+            </div>
+            <div class="db-date-item">
+              <span class="db-date-label">Expira:</span>
+              <span class="db-date-value"
+                >{{ venta.fecha_expiracion.strftime('%d-%m-%Y') }}</span
+              >
+            </div>
+          </div>
+        </div>
+        <div class="db-card-footer">
+          <a
+            href="{{ url_for('ver_curso', curso_id=venta.curso.id) }}"
+            class="db-btn db-btn-view db-btn-block"
+          >
+            <i class="fas fa-eye"></i> Ver Curso
+          </a>
+        </div>
+      </div>
+      {% endif %} {% endfor %}
+    </div>
+  </section>
+
+  <section id="db-pending-section" class="db-section">
+    <h2 class="db-section-title">
+      Cursos Pendientes de pago por transferencia
+    </h2>
+    <div id="db-pending-courses" class="db-cards-grid">
+      {% for venta in mis_ventas %} {% if venta.estado_transferencia ==
+      'pendiente' %}
+      <div
+        class="db-course-card db-card-pending"
+        data-search="{{ venta.curso.nombre.lower() }} {{ venta.metodo_pago.lower() }} {{ venta.fecha_venta.strftime('%d-%m-%Y') }}"
+      >
+        <div class="db-card-header">
+          <h3 class="db-card-title">{{ venta.curso.nombre }}</h3>
+          <span class="db-card-meta db-payment-method"
+            >{{ venta.metodo_pago }}</span
+          >
+        </div>
+        <div class="db-card-body">
+          <div class="db-card-dates">
+            <div class="db-date-item">
+              <span class="db-date-label">Fecha:</span>
+              <span class="db-date-value"
+                >{{ venta.fecha_venta.strftime('%d-%m-%Y') }}</span
+              >
+            </div>
+          </div>
+        </div>
+        <div class="db-card-footer">
+          <span class="db-status-badge db-status-pending">
+            <i class="fas fa-clock"></i> Pendiente de Confirmación
+          </span>
+        </div>
+      </div>
+      {% endif %} {% endfor %}
+    </div>
+  </section>
+  {% endif %}
+
+  <section id="db-available-courses" class="db-section">
+    <h2 class="db-section-title">Cursos Disponibles</h2>
+    <div id="db-courses-grid" class="db-cards-grid">
+      {% for curso in cursos %}
+      <div
+        class="db-course-card"
+        data-search="{{ curso.nombre.lower() }} {{ curso.precio|string }}"
+      >
+        <div class="db-card-header">
+          <h3 class="db-card-title">{{ curso.nombre }}</h3>
+          <span class="db-card-price">{{ curso.precio }} USD</span>
+        </div>
+        <div class="db-card-body">
+          <p class="db-card-description">
+            {{ curso.descripcion|truncate(100) }}
+          </p>
+        </div>
+        <div class="db-card-footer">
+          <a
+            href="{{ url_for('ver_curso', curso_id=curso.id) }}"
+            class="db-btn db-btn-view db-btn-sm"
+          >
+            <i class="fas fa-info-circle"></i> Detalles
+          </a>
+          {% if current_user.is_authenticated %} {% if curso.id in
+          cursos_comprados_ids %}
+          <span class="db-status-badge db-status-confirmed">
+            <i class="fas fa-check"></i> Ya comprado
+          </span>
+          {% elif curso.id in cursos_pendientes_ids %}
+          <span class="db-status-badge db-status-pending">
+            <i class="fas fa-clock"></i> Pendiente
+          </span>
+          {% else %}
+          <a
+            href="{{ url_for('comprar_curso', curso_id=curso.id) }}"
+            class="db-btn db-btn-primary db-btn-sm"
+          >
+            <i class="fas fa-shopping-cart"></i> Comprar
+          </a>
+          {% endif %} {% else %}
+          <a href="{{url_for('login')}}" class="db-btn db-btn-login db-btn-sm">
+            <i class="fas fa-sign-in-alt"></i> Iniciar sesión
+          </a>
+          {% endif %}
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </section>
 </div>
-
-{% if current_user.is_authenticated and current_user.rol == 'admin' %}
-<section class="dashboard-section" id="admin-section">
-  <div class="section-header">
-    <h2>Administración de Cursos</h2>
-    <a href="{{ url_for('nuevo_curso') }}" class="btn btn-primary"
-      >Crear Nuevo Curso</a
-    >
-  </div>
-
-  <div class="table-container">
-    <table class="data-table" id="admin-cursos-table">
-      <thead>
-        <tr>
-          <th>Nombre</th>
-          <th>Precio</th>
-          <th>Acciones</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for curso in cursos %}
-        <tr data-search="{{ curso.nombre.lower() }} {{ curso.precio|string }}">
-          <td>{{ curso.nombre }}</td>
-          <td class="price-cell">{{ curso.precio }} USD</td>
-          <td class="actions-cell">
-            <a
-              href="{{ url_for('editar_curso', curso_id=curso.id) }}"
-              class="btn btn-edit"
-              >Editar</a
-            >
-            <a
-              href="{{ url_for('eliminar_curso', curso_id=curso.id) }}"
-              class="btn btn-delete"
-              >Eliminar</a
-            >
-          </td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-  </div>
-</section>
-{% endif %} {% if current_user.is_authenticated %}
-<section class="dashboard-section" id="mis-cursos-section">
-  <h2>Mis Cursos Comprados</h2>
-  <div class="cards-container" id="mis-cursos-comprados">
-    {% for venta in mis_ventas %} {% if venta.estado_transferencia ==
-    'confirmada' and venta.fecha_expiracion > current_time %}
-    <div
-      class="card"
-      data-search="{{ venta.curso.nombre.lower() }} {{ venta.metodo_pago.lower() }} {{ venta.fecha_venta.strftime('%d-%m-%Y') }}"
-    >
-      <h3>{{ venta.curso.nombre }}</h3>
-      <p>Método: {{ venta.metodo_pago }}</p>
-      <p>Compra: {{ venta.fecha_venta.strftime('%d-%m-%Y') }}</p>
-      <p>Expira: {{ venta.fecha_expiracion.strftime('%d-%m-%Y') }}</p>
-      <div class="actions">
-        <a
-          href="{{ url_for('ver_curso', curso_id=venta.curso.id) }}"
-          class="btn btn-view"
-          >Ver Curso</a
-        >
-      </div>
-    </div>
-    {% endif %} {% endfor %}
-  </div>
-</section>
-
-<section class="dashboard-section" id="pendientes-section">
-  <h2>Cursos Pendientes de Confirmación</h2>
-  <div class="cards-container" id="cursos-pendientes">
-    {% for venta in mis_ventas %} {% if venta.estado_transferencia ==
-    'pendiente' %}
-    <div
-      class="card"
-      data-search="{{ venta.curso.nombre.lower() }} {{ venta.metodo_pago.lower() }} {{ venta.fecha_venta.strftime('%d-%m-%Y') }}"
-    >
-      <h3>{{ venta.curso.nombre }}</h3>
-      <p>Método: {{ venta.metodo_pago }}</p>
-      <p>Fecha: {{ venta.fecha_venta.strftime('%d-%m-%Y') }}</p>
-      <div class="actions">
-        <span class="status-badge status-pending"
-          >Pendiente de Confirmación</span
-        >
-      </div>
-    </div>
-    {% endif %} {% endfor %}
-  </div>
-</section>
-{% endif %}
-
-<section class="dashboard-section" id="disponibles-section">
-  <h2>Cursos Disponibles</h2>
-  <div class="cards-container" id="cursos-disponibles">
-    {% for curso in cursos %}
-    <div
-      class="card"
-      data-search="{{ curso.nombre.lower() }} {{ curso.precio|string }}"
-    >
-      <h3>{{ curso.nombre }}</h3>
-      <p class="price-tag">{{ curso.precio }} USD</p>
-      <div class="actions">
-        <a
-          href="{{ url_for('ver_curso', curso_id=curso.id) }}"
-          class="btn btn-view"
-          >Ver Detalle</a
-        >
-        {% if current_user.is_authenticated %} {% if curso.id in
-        cursos_comprados_ids %}
-        <span class="status-badge status-confirmed">Ya comprado</span>
-        {% elif curso.id in cursos_pendientes_ids %}
-        <span class="status-badge status-pending">Pendiente</span>
-        {% else %}
-        <a
-          href="{{ url_for('comprar_curso', curso_id=curso.id) }}"
-          class="btn btn-buy"
-          >Comprar</a
-        >
-        {% endif %} {% else %}
-        <a href="{{url_for('login')}}" class="btn btn-login">
-          <span>Inicia sesión para comprar</span>
-        </a>
-        {% endif %}
-      </div>
-    </div>
-    {% endfor %}
-  </div>
-</section>
 
 <script>
   // Función para normalizar texto (eliminar acentos)
@@ -153,239 +212,15 @@ content %}
   };
 
   // Búsqueda global
-  document.getElementById('global-search-input').addEventListener('input', function() {
+  document.getElementById('db-search-input').addEventListener('input', function() {
     const searchTerm = normalizeText(this.value);
+    const allElements = document.querySelectorAll('#db-admin-table .db-table-row, .db-course-card');
 
-    // Buscar en todas las secciones
-    document.querySelectorAll('#admin-cursos-table tbody tr, .card').forEach(element => {
+    allElements.forEach(element => {
       const searchText = normalizeText(element.getAttribute('data-search') || '');
-      if (searchTerm === '' || searchText.includes(searchTerm)) {
-        element.style.display = '';
-      } else {
-        element.style.display = 'none';
-      }
+      element.style.display = searchTerm === '' || searchText.includes(searchTerm) ? '' : 'none';
     });
   });
-
-  // Búsqueda por sección (opcional)
-  const setupSectionSearch = (inputId, containerId) => {
-    const input = document.getElementById(inputId);
-    if (input) {
-      input.addEventListener('input', function() {
-        const searchTerm = normalizeText(this.value);
-        document.querySelectorAll(`#${containerId} .card`).forEach(card => {
-          const searchText = normalizeText(card.getAttribute('data-search'));
-          card.style.display = searchTerm === '' || searchText.includes(searchTerm) ? '' : 'none';
-        });
-      });
-    }
-  };
-
-  // Inicializar búsquedas por sección si existen
-  setupSectionSearch('mis-cursos-search', 'mis-cursos-comprados');
-  setupSectionSearch('pendientes-search', 'cursos-pendientes');
-  setupSectionSearch('disponibles-search', 'cursos-disponibles');
 </script>
 
-<style>
-  /* Estilos base */
-  :root {
-    --primary-color: #4361ee;
-    --secondary-color: #3f37c9;
-    --success-color: #4cc9f0;
-    --danger-color: #f72585;
-    --warning-color: #f8961e;
-    --light-color: #f8f9fa;
-    --dark-color: #212529;
-    --border-radius: 8px;
-    --box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    --transition: all 0.3s ease;
-  }
-
-  /* Búsqueda global */
-  .search-global-container {
-    margin: 20px 0;
-    max-width: 600px;
-    position: relative;
-  }
-
-  .search-global-container .search-input {
-    width: 100%;
-    padding: 12px 20px 12px 45px;
-    font-size: 16px;
-  }
-
-  .search-global-container .search-icon {
-    left: 20px;
-  }
-
-  /* Secciones */
-  .dashboard-section {
-    margin-bottom: 40px;
-  }
-
-  .section-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 20px;
-  }
-
-  /* Cards */
-  .cards-container {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: 20px;
-  }
-
-  .card {
-    background: white;
-    border-radius: var(--border-radius);
-    box-shadow: var(--box-shadow);
-    padding: 20px;
-    transition: var(--transition);
-  }
-
-  .card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
-  }
-
-  .price-tag {
-    font-weight: bold;
-    color: var(--primary-color);
-    font-size: 1.1rem;
-  }
-
-  .actions {
-    margin-top: 15px;
-    display: flex;
-    gap: 10px;
-    flex-wrap: wrap;
-    align-items: center;
-  }
-
-  /* Botones */
-  .btn {
-    padding: 8px 16px;
-    border: none;
-    border-radius: var(--border-radius);
-    cursor: pointer;
-    font-weight: 500;
-    transition: var(--transition);
-    text-align: center;
-    text-decoration: none;
-    display: inline-block;
-  }
-
-  .btn-primary {
-    background-color: var(--primary-color);
-    color: white;
-  }
-
-  .btn-primary:hover {
-    background-color: var(--secondary-color);
-  }
-
-  .btn-edit {
-    background-color: var(--success-color);
-    color: white;
-  }
-
-  .btn-delete {
-    background-color: var(--danger-color);
-    color: white;
-  }
-
-  .btn-view {
-    background-color: #6c757d;
-    color: white;
-  }
-
-  .btn-buy {
-    background-color: var(--primary-color);
-    color: white;
-  }
-
-  .btn-login {
-    background-color: var(--warning-color);
-    color: white;
-  }
-
-  /* Status badges */
-  .status-badge {
-    display: inline-block;
-    padding: 4px 8px;
-    border-radius: 20px;
-    font-size: 0.8rem;
-    font-weight: 500;
-  }
-
-  .status-confirmed {
-    background-color: #d4edda;
-    color: #155724;
-  }
-
-  .status-pending {
-    background-color: #fff3cd;
-    color: #856404;
-  }
-
-  /* Tablas */
-  .table-container {
-    overflow-x: auto;
-    border-radius: var(--border-radius);
-    box-shadow: var(--box-shadow);
-  }
-
-  .data-table {
-    width: 100%;
-    border-collapse: collapse;
-    background: white;
-  }
-
-  .data-table thead {
-    background-color: var(--primary-color);
-    color: white;
-  }
-
-  .data-table th, .data-table td {
-    padding: 12px 15px;
-    text-align: left;
-  }
-
-  .data-table tr {
-    border-bottom: 1px solid #e9ecef;
-  }
-
-  .data-table tr:hover {
-    background-color: var(--light-color);
-  }
-
-  .actions-cell {
-    white-space: nowrap;
-  }
-
-  /* Responsive */
-  @media (max-width: 768px) {
-    .cards-container {
-      grid-template-columns: 1fr;
-    }
-
-    .section-header {
-      flex-direction: column;
-      align-items: flex-start;
-      gap: 10px;
-    }
-
-    .data-table {
-      display: block;
-    }
-
-    .actions {
-      flex-direction: column;
-      align-items: flex-start;
-    }
-  }
-</style>
 {% endblock %}

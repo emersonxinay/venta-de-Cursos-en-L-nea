@@ -29,3 +29,31 @@ class Venta(db.Model):
     curso_id = db.Column(db.Integer, db.ForeignKey('curso.id'), nullable=False)
     metodo_pago = db.Column(db.String(50), nullable=False)
     fecha_venta = db.Column(db.DateTime, default=datetime.utcnow)
+
+
+class HistoricoProgreso(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    progreso_id = db.Column(db.Integer, db.ForeignKey(
+        'progreso_usuario.id'), nullable=False)
+    porcentaje = db.Column(db.Integer)
+    fecha_registro = db.Column(db.DateTime, default=datetime.utcnow)
+
+
+class ProgresoUsuario(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    usuario_id = db.Column(db.Integer, db.ForeignKey(
+        'usuario.id'), nullable=False)
+    seccion_id = db.Column(db.Integer, db.ForeignKey(
+        'seccion.id'), nullable=False)
+    progreso = db.Column(db.Float, default=0.0)  # Porcentaje 0-100
+    completado = db.Column(db.Boolean, default=False)
+    ultima_actualizacion = db.Column(db.DateTime, default=datetime.utcnow)
+
+
+class Certificado(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    codigo = db.Column(db.String(50), unique=True)
+    usuario_id = db.Column(db.Integer, db.ForeignKey('usuario.id'))
+    curso_id = db.Column(db.Integer, db.ForeignKey('curso.id'))
+    fecha_emision = db.Column(db.DateTime, default=datetime.utcnow)
+    archivo_path = db.Column(db.String(255))

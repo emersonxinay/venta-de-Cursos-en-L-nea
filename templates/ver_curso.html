@@ -1,52 +1,477 @@
-<!-- filepath: /Users/emerson/Desktop/Todo_Mac/proyectos_python/venta_cursos_pagos/templates/ver_curso.html -->
-{% extends "base.html" %} {% block title %}{{ curso.nombre }}{% endblock %} {%
-block content %}
-<h1>{{ curso.nombre }}</h1>
-<p>{{ curso.descripcion }}</p>
+{% extends "base.html" %} {% block title %}{{ curso.nombre }} | Plataforma de
+Cursos{% endblock %} {% block content %}
+<div id="curso-detalle-container" class="curso-detalle">
+  <!-- Header del curso -->
+  <div class="curso-header">
+    <div class="curso-info">
+      <h1 id="curso-titulo" class="curso-titulo">{{ curso.nombre }}</h1>
+      <p id="curso-descripcion" class="curso-descripcion">
+        {{ curso.descripcion }}
+      </p>
 
-{% if current_user.is_authenticated and current_user.rol == 'admin' %}
-<a href="{{ url_for('nueva_seccion', curso_id=curso.id) }}"
-  >Agregar Nueva Sección</a
->
-{% endif %}
+      <div class="curso-meta-data">
+        <span class="curso-categoria">{{ curso.categoria }}</span>
+        <span class="curso-rating">★★★★☆ (4.5/5)</span>
+      </div>
 
-<h2>Contenido del Curso</h2>
-<ul>
-  {% for seccion in secciones %}
-  <li>
-    <h3>{{ seccion.titulo }}</h3>
-    <p>{{ seccion.descripcion }}</p>
-    {% if seccion.es_gratis or (current_user.is_authenticated and venta) %} {%
-    if seccion.video_url %}
-    <video src="{{ seccion.video_url }}" controls></video>
-    {% elif seccion.video_file %}
-    <video
-      src="{{ url_for('static', filename=seccion.video_file) }}"
-      controls
-    ></video>
-    {% endif %} {% else %}
-    <p>
-      Contenido bloqueado.
-      <a href="{{ url_for('comprar_curso', curso_id=curso.id) }}"
-        >Comprar curso</a
+      {% if current_user.is_authenticated and current_user.rol == 'admin' %}
+      <div class="curso-admin-actions">
+        <a
+          href="{{ url_for('nueva_seccion', curso_id=curso.id) }}"
+          class="btn btn-add-section"
+        >
+          <i class="fas fa-plus"></i> Agregar Sección
+        </a>
+      </div>
+      {% endif %}
+    </div>
+
+    {% if not (current_user.is_authenticated and venta) %}
+    <div id="curso-compra-card" class="curso-compra-card">
+      <div class="curso-precio-container">
+        <span class="curso-precio-actual"
+          >${{ "%.2f"|format(curso.precio) }}</span
+        >
+        {% if curso.precio_original %}
+        <span class="curso-precio-original"
+          >${{ "%.2f"|format(curso.precio_original) }}</span
+        >
+        {% endif %}
+      </div>
+      <a
+        href="{{ url_for('comprar_curso', curso_id=curso.id) }}"
+        class="btn btn-comprar-curso"
       >
-      para acceder.
-    </p>
-    {% endif %} {% if current_user.is_authenticated and current_user.rol ==
-    'admin' %}
-    <a
-      href="{{ url_for('editar_seccion', curso_id=curso.id, seccion_id=seccion.id) }}"
-      >Editar</a
-    >
-    <form
-      method="POST"
-      action="{{ url_for('eliminar_seccion', curso_id=curso.id, seccion_id=seccion.id) }}"
-      style="display:inline;"
-    >
-      <button type="submit">Eliminar</button>
-    </form>
+        Comprar Curso
+      </a>
+      <div class="curso-garantia">
+        <i class="fas fa-shield-alt"></i> Garantía de 30 días
+      </div>
+    </div>
     {% endif %}
-  </li>
-  {% endfor %}
-</ul>
+  </div>
+
+  <!-- Contenido del curso -->
+  <div class="curso-contenido-wrapper">
+    <div class="curso-contenido-header">
+      <h2 class="curso-contenido-titulo">Contenido del Curso</h2>
+      <div class="curso-progreso-container">
+        {% if venta %}
+        <div class="curso-progreso-bar">
+          <div
+            class="curso-progreso-fill"
+            style="width: {{ progreso_curso }}%"
+          ></div>
+        </div>
+        <span class="curso-progreso-texto"
+          >{{ progreso_curso }}% completado</span
+        >
+
+        {% if progreso_curso == 100 %}
+        <div class="curso-certificado-container">
+          <button id="btn-ver-certificado" class="btn-certificado">
+            <i class="fas fa-award"></i> Ver Certificado
+          </button>
+          <div id="modal-certificado" class="modal-certificado">
+            <div class="modal-contenido">
+              <span class="cerrar-modal">&times;</span>
+              <h3>Certificado de Finalización</h3>
+              <p>
+                Felicitaciones {{ current_user.nombre }} por completar el curso:
+              </p>
+              <h4>{{ curso.nombre }}</h4>
+              <div class="certificado-datos">
+                <p>Fecha: {{ fecha_actual.strftime('%d/%m/%Y') }}</p>
+                <p>Código: CERT-{{ curso.id }}-{{ current_user.id }}</p>
+              </div>
+              <div class="certificado-firma">
+                <p>_________________________</p>
+                <p>Equipo de Plataforma de Cursos</p>
+              </div>
+              <button id="btn-descargar-certificado" class="btn-descargar">
+                <i class="fas fa-download"></i> Descargar Certificado
+              </button>
+            </div>
+          </div>
+        </div>
+        {% endif %} {% endif %}
+      </div>
+    </div>
+
+    <div id="curso-secciones-container" class="curso-secciones">
+      {% for seccion in secciones %}
+      <div
+        id="seccion-{{ seccion.id }}"
+        class="curso-seccion-card {% if seccion.es_gratis %}seccion-gratis{% endif %}"
+      >
+        <div class="seccion-header">
+          <h3 class="seccion-titulo">
+            <span class="seccion-numero">{{ loop.index }}.</span> {{
+            seccion.titulo }} {% if seccion.es_gratis %}<span
+              class="seccion-gratis-badge"
+              >GRATIS</span
+            >{% endif %}
+          </h3>
+          <span class="seccion-duracion"
+            ><i class="far fa-clock"></i> {{ seccion.duracion }} min</span
+          >
+        </div>
+
+        <p class="seccion-descripcion">{{ seccion.descripcion }}</p>
+
+        <!-- Contenido de la sección -->
+        {% if seccion.es_gratis or (current_user.is_authenticated and venta) %}
+        <div class="seccion-contenido">
+          {% if seccion.video_url or seccion.video_file %}
+          <div class="seccion-video-container">
+            {% if seccion.video_url %} {# Extraer ID de video de YouTube #} {%
+            if 'youtube.com' in seccion.video_url or 'youtu.be' in
+            seccion.video_url %} {% set video_id =
+            seccion.video_url.split('v=')[1].split('&')[0] if 'v=' in
+            seccion.video_url else seccion.video_url.split('/')[-1] %}
+            <div class="youtube-player-container">
+              <lite-youtube
+                videoid="{{ video_id }}"
+                params="rel=0"
+                style="background-image: url('https://i.ytimg.com/vi/{{ video_id }}/hqdefault.jpg');"
+              >
+              </lite-youtube>
+            </div>
+            {% else %} {# Para otros proveedores de video #}
+            <iframe
+              src="{{ seccion.video_url }}"
+              frameborder="0"
+              allowfullscreen
+              id="video-{{ seccion.id }}"
+            ></iframe>
+            {% endif %} {% elif seccion.video_file %}
+            <video controls id="video-{{ seccion.id }}">
+              <source
+                src="{{ url_for('static', filename='uploads/videos/' + seccion.video_file) }}"
+                type="video/mp4"
+              />
+              Tu navegador no soporta el elemento de video.
+            </video>
+            {% endif %}
+
+            <!-- Barra de progreso del video -->
+            <div class="video-progreso-container">
+              <div class="video-progreso-bar">
+                <div
+                  class="video-progreso-fill"
+                  id="progreso-video-{{ seccion.id }}"
+                ></div>
+              </div>
+              <span
+                class="video-progreso-texto"
+                id="texto-progreso-{{ seccion.id }}"
+                >0% visto</span
+              >
+              <input
+                type="checkbox"
+                id="completado-{{ seccion.id }}"
+                class="video-completado"
+                {%
+                if
+                seccion.id
+                in
+                secciones_completadas
+                %}checked{%
+                endif
+                %}
+              />
+              <label for="completado-{{ seccion.id }}" class="completado-label">
+                <i class="fas fa-check"></i> Completado
+              </label>
+            </div>
+          </div>
+          {% endif %} {% if seccion.recursos %}
+          <div class="seccion-recursos">
+            <h4><i class="fas fa-paperclip"></i> Recursos</h4>
+            <ul class="recursos-lista">
+              {% for recurso in seccion.recursos %}
+              <li class="recurso-item">
+                <a href="{{ recurso.url }}" download class="recurso-link">
+                  <i class="fas fa-download"></i> {{ recurso.nombre }}
+                </a>
+              </li>
+              {% endfor %}
+            </ul>
+          </div>
+          {% endif %}
+        </div>
+        {% else %}
+        <div class="seccion-bloqueada">
+          <div class="bloqueado-icono">
+            <i class="fas fa-lock"></i>
+          </div>
+          <p class="bloqueado-texto">
+            Este contenido está bloqueado. Compra el curso para acceder a todas
+            las lecciones.
+          </p>
+          <a
+            href="{{ url_for('comprar_curso', curso_id=curso.id) }}"
+            class="btn btn-desbloquear"
+          >
+            Desbloquear Curso
+          </a>
+        </div>
+        {% endif %} {% if current_user.is_authenticated and current_user.rol ==
+        'admin' %}
+        <div class="seccion-admin-actions">
+          <a
+            href="{{ url_for('editar_seccion', curso_id=curso.id, seccion_id=seccion.id) }}"
+            class="btn btn-editar-seccion"
+          >
+            <i class="fas fa-edit"></i> Editar
+          </a>
+          <form
+            method="POST"
+            action="{{ url_for('eliminar_seccion', curso_id=curso.id, seccion_id=seccion.id) }}"
+            class="form-eliminar-seccion"
+          >
+            <button
+              type="submit"
+              class="btn btn-eliminar-seccion"
+              onclick="return confirm('¿Estás seguro de eliminar esta sección?')"
+            >
+              <i class="fas fa-trash-alt"></i> Eliminar
+            </button>
+          </form>
+        </div>
+        {% endif %}
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // ... (código existente del modal del certificado) ...
+
+      // Objeto para controlar los reproductores
+      const players = {};
+      const progressIntervals = {};
+      const videoProgressData = {}; // Almacena el progreso de cada video
+
+      // Función para calcular el progreso total del curso
+      function calculateTotalProgress() {
+        const totalSections = document.querySelectorAll('.curso-seccion-card').length;
+        if (totalSections === 0) return 0;
+
+        let totalProgress = 0;
+        let sectionsWithProgress = 0;
+
+        for (const seccionId in videoProgressData) {
+          totalProgress += videoProgressData[seccionId];
+          sectionsWithProgress++;
+        }
+
+        // Si hay secciones sin progreso registrado, las contamos como 0%
+        if (sectionsWithProgress < totalSections) {
+          totalProgress += 0 * (totalSections - sectionsWithProgress);
+        }
+
+        return Math.round((totalProgress / totalSections) * 100) / 100;
+      }
+
+      // Función para actualizar la UI del progreso del curso
+      function updateCourseProgressUI() {
+        const totalProgress = calculateTotalProgress();
+        const cursoProgresoFill = document.querySelector('.curso-progreso-fill');
+        const cursoProgresoTexto = document.querySelector('.curso-progreso-texto');
+
+        if (cursoProgresoFill) {
+          cursoProgresoFill.style.width = `${totalProgress}%`;
+        }
+
+        if (cursoProgresoTexto) {
+          cursoProgresoTexto.textContent = `${totalProgress}% completado`;
+        }
+      }
+
+      // Función para actualizar la UI del progreso del video
+      function updateVideoProgressUI(seccionId, porcentaje) {
+        const progresoFill = document.getElementById(`progreso-video-${seccionId}`);
+        const progresoTexto = document.getElementById(`texto-progreso-${seccionId}`);
+        const checkbox = document.getElementById(`completado-${seccionId}`);
+
+        if (progresoFill) {
+          progresoFill.style.width = `${porcentaje}%`;
+          progresoFill.style.backgroundColor = porcentaje >= 95 ? '#2E7D32' : '#4CAF50';
+        }
+
+        if (progresoTexto) {
+          progresoTexto.textContent = `${Math.round(porcentaje)}% visto`;
+          progresoTexto.style.color = porcentaje >= 95 ? '#2E7D32' : '#555';
+        }
+
+        if (checkbox) {
+          checkbox.checked = porcentaje >= 95;
+        }
+
+        // Actualizar el objeto de progreso
+        videoProgressData[seccionId] = porcentaje;
+
+        // Actualizar el progreso general del curso
+        updateCourseProgressUI();
+      }
+
+      // Función para actualizar el progreso en el servidor
+      function updateServerProgress(seccionId, porcentaje, cursoId) {
+        const endpoint = '/actualizar_progreso_seccion';
+        const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
+
+        fetch(endpoint, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken
+            },
+            body: JSON.stringify({
+                seccion_id: seccionId,
+                curso_id: cursoId,
+                porcentaje: Math.round(porcentaje)
+            }),
+            credentials: 'same-origin'
+        }).then(response => response.json())
+          .then(data => {
+              if (data && data.success) {
+                  updateCourseProgressUI(data.progreso_curso);
+              }
+          }).catch(error => console.error('Error:', error));
+    }
+
+      // Función para manejar el checkbox de completado
+      function setupCompletionCheckbox(seccionId) {
+        const checkbox = document.getElementById(`completado-${seccionId}`);
+        if (checkbox) {
+          checkbox.addEventListener('change', function() {
+            const porcentaje = this.checked ? 100 : 0;
+            updateVideoProgressUI(seccionId, porcentaje);
+            updateServerProgress(seccionId, porcentaje);
+          });
+        }
+      }
+
+      // Función para videos de YouTube (API iframe)
+      function setupYouTubePlayer(seccionId) {
+        const iframe = document.getElementById(`video-${seccionId}`);
+        if (!iframe || !iframe.src.includes('youtube.com')) return;
+
+        // Inicializar progreso a 0 si no existe
+        if (!videoProgressData[seccionId]) {
+          videoProgressData[seccionId] = 0;
+        }
+
+        // Esperar a que la API de YouTube esté lista
+        function onYouTubeIframeAPIReady() {
+          players[`yt-${seccionId}`] = new YT.Player(iframe, {
+            events: {
+              'onReady': (event) => {
+                console.log('YouTube player ready');
+              },
+              'onStateChange': (event) => {
+                if (event.data === YT.PlayerState.PLAYING) {
+                  clearInterval(progressIntervals[`yt-${seccionId}`]);
+
+                  progressIntervals[`yt-${seccionId}`] = setInterval(() => {
+                    const player = players[`yt-${seccionId}`];
+                    try {
+                      const duration = player.getDuration();
+                      const currentTime = player.getCurrentTime();
+                      const porcentaje = (currentTime / duration) * 100;
+
+                      updateVideoProgressUI(seccionId, porcentaje);
+
+                      // Actualizar servidor cada 10% de progreso o cuando se pausa
+                      if (porcentaje % 10 < 0.5 || event.data === YT.PlayerState.PAUSED) {
+                        updateServerProgress(seccionId, porcentaje);
+                      }
+                    } catch (e) {
+                      console.error('Error al obtener progreso YouTube:', e);
+                    }
+                  }, 1000);
+                } else if (event.data === YT.PlayerState.PAUSED ||
+                          event.data === YT.PlayerState.ENDED) {
+                  clearInterval(progressIntervals[`yt-${seccionId}`]);
+
+                  if (event.data === YT.PlayerState.ENDED) {
+                    updateVideoProgressUI(seccionId, 100);
+                    updateServerProgress(seccionId, 100);
+                  }
+                }
+              }
+            }
+          });
+        }
+
+        // Cargar la API de YouTube si no está cargada
+        if (typeof YT === 'undefined' || typeof YT.Player === 'undefined') {
+          const tag = document.createElement('script');
+          tag.src = "https://www.youtube.com/iframe_api";
+          const firstScriptTag = document.getElementsByTagName('script')[0];
+          firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+
+          window.onYouTubeIframeAPIReady = function() {
+            onYouTubeIframeAPIReady();
+          };
+        } else {
+          onYouTubeIframeAPIReady();
+        }
+
+        setupCompletionCheckbox(seccionId);
+      }
+
+      // Inicializar todos los reproductores de YouTube
+      document.querySelectorAll('iframe[id^="video-"]').forEach(iframe => {
+        if (iframe.src.includes('youtube.com')) {
+          const seccionId = iframe.id.split('-')[1];
+          setupYouTubePlayer(seccionId);
+        }
+      });
+
+      // Manejar lite-youtube-embed (solución simplificada)
+      document.querySelectorAll('lite-youtube').forEach(yt => {
+        const seccionId = yt.closest('.curso-seccion-card').id.split('-')[1];
+
+        // Inicializar progreso a 0 si no existe
+        if (!videoProgressData[seccionId]) {
+          videoProgressData[seccionId] = 0;
+        }
+
+        setupCompletionCheckbox(seccionId);
+
+        // Escuchar clic en el botón de play para comenzar a rastrear
+        yt.addEventListener('click', function() {
+          // Simulamos progreso para lite-youtube (no podemos rastrear exactamente)
+          let simulatedProgress = 0;
+          const progressInterval = setInterval(() => {
+            if (simulatedProgress < 100) {
+              simulatedProgress += 5;
+              updateVideoProgressUI(seccionId, simulatedProgress);
+
+              if (simulatedProgress % 20 === 0) {
+                updateServerProgress(seccionId, simulatedProgress);
+              }
+            } else {
+              clearInterval(progressInterval);
+            }
+          }, 1000);
+        });
+      });
+
+      // Inicializar el progreso del curso al cargar la página
+      updateCourseProgressUI();
+    });
+  </script>
+</div>
+{% endblock %} {% block scripts %}
+<!-- Agrega el JS de lite-youtube-embed -->
+<script src="https://cdn.jsdelivr.net/npm/lite-youtube-embed@0.2.0/src/lite-yt-embed.js"></script>
+
+<!-- API de YouTube -->
+<script src="https://www.youtube.com/iframe_api"></script>
+<!-- API de Vimeo -->
+<script src="https://player.vimeo.com/api/player.js"></script>
+
 {% endblock %}

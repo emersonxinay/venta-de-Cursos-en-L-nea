@@ -1,104 +1,321 @@
-/* General Styles */
-body {
-  font-family: 'Arial', sans-serif;
-  margin: 0;
-  padding: 0;
-  background: linear-gradient(to right, #f8f9fa, #e9ecef);
-  color: #343a40;
+/* Dashboard Styles */
+#db-main-container.db-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem 1rem;
+  font-family: 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
 }
 
-h1 {
-  color: #007bff;
-  text-align: center;
-  margin-top: 1rem;
-}
-
-h2 {
-  color: #343a40;
-  margin-top: 2rem;
+.db-header {
+  margin-bottom: 2.5rem;
   text-align: center;
 }
 
-a {
-  color: #007bff;
-  text-decoration: none;
+#db-main-title.db-title {
+  font-size: 2.2rem;
+  color: #2d3748;
+  margin-bottom: 1rem;
+  font-weight: 700;
 }
 
-a:hover {
-  text-decoration: underline;
+/* Search Bar */
+#db-global-search.db-search-container {
+  position: relative;
+  max-width: 600px;
+  margin: 0 auto;
 }
 
-.cards-container {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 1rem;
-  justify-content: center;
+.db-search-input {
+  width: 100%;
+  padding: 0.75rem 1.25rem 0.75rem 3rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 50px;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
 }
 
-.card {
-  background: linear-gradient(to bottom, #ffffff, #f1f1f1);
-  border-radius: 10px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  padding: 1rem;
-  width: 300px;
-  margin: 1rem;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
+.db-search-input:focus {
+  outline: none;
+  border-color: #4299e1;
+  box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.2);
 }
 
-.card h3 {
-  margin: 0;
-  color: #007bff;
+.db-search-icon {
+  position: absolute;
+  left: 1.25rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #a0aec0;
 }
 
-.card p {
-  margin: 0.5rem 0;
+/* Sections */
+.db-section {
+  margin-bottom: 3rem;
+  background: white;
+  border-radius: 0.5rem;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  padding: 1.5rem;
 }
 
-.card .actions {
+.db-section-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+  gap: 1rem;
 }
 
-.card .actions a, .card .actions span {
-  font-weight: bold;
+.db-section-title {
+  font-size: 1.5rem;
+  color: #2d3748;
+  margin: 0;
 }
 
-.card .actions .btn {
-  background: linear-gradient(to right, #007bff, #6610f2);
-  color: white;
-  border: none;
+/* Buttons */
+.db-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
   padding: 0.5rem 1rem;
-  border-radius: 5px;
-  cursor: pointer;
+  border-radius: 0.375rem;
+  font-weight: 500;
   text-decoration: none;
+  transition: all 0.2s ease;
+  border: 1px solid transparent;
+  cursor: pointer;
 }
 
-.card .actions .btn:hover {
-  background: linear-gradient(to right, #0056b3, #520dc2);
+.db-btn-sm {
+  padding: 0.375rem 0.75rem;
+  font-size: 0.875rem;
 }
 
-.card .actions .pendiente {
-  color: #ffc107;
+.db-btn-block {
+  display: flex;
+  width: 100%;
 }
 
-.card .actions .no-session {
-  color: #dc3545;
+.db-btn-primary {
+  background-color: #4299e1;
+  color: white;
 }
 
-.card .actions .comprado {
-  color: #28a745;
+.db-btn-primary:hover {
+  background-color: #3182ce;
 }
-/* Responsive Styles */
+
+.db-btn-view {
+  background-color: #38b2ac;
+  color: white;
+}
+
+.db-btn-view:hover {
+  background-color: #319795;
+}
+
+.db-btn-edit {
+  background-color: #f6ad55;
+  color: white;
+}
+
+.db-btn-edit:hover {
+  background-color: #ed8936;
+}
+
+.db-btn-delete {
+  background-color: #f56565;
+  color: white;
+}
+
+.db-btn-delete:hover {
+  background-color: #e53e3e;
+}
+
+.db-btn-login {
+  background-color: #edf2f7;
+  color: #4a5568;
+}
+
+.db-btn-login:hover {
+  background-color: #e2e8f0;
+}
+
+/* Table Styles */
+.db-table-wrapper {
+  overflow-x: auto;
+}
+
+.db-data-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.db-table-header-row {
+  background-color: #f7fafc;
+  border-bottom: 2px solid #e2e8f0;
+}
+
+.db-table-head {
+  padding: 1rem;
+  text-align: left;
+  font-weight: 600;
+  color: #4a5568;
+}
+
+.db-table-row {
+  border-bottom: 1px solid #edf2f7;
+  transition: background-color 0.2s;
+}
+
+.db-table-row:hover {
+  background-color: #f8fafc;
+}
+
+.db-table-cell {
+  padding: 1rem;
+  vertical-align: middle;
+}
+
+.db-col-name {
+  width: 60%;
+}
+
+.db-col-price {
+  width: 15%;
+}
+
+.db-col-actions {
+  width: 25%;
+}
+
+.db-action-btns {
+  display: flex;
+  gap: 0.5rem;
+}
+
+/* Cards Grid */
+.db-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1.5rem;
+  margin-top: 1rem;
+}
+
+.db-course-card {
+  background: white;
+  border-radius: 0.5rem;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  transition: transform 0.2s, box-shadow 0.2s;
+  display: flex;
+  flex-direction: column;
+}
+
+.db-course-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+.db-card-header {
+  padding: 1.25rem 1.25rem 0.5rem;
+}
+
+.db-card-title {
+  font-size: 1.125rem;
+  color: #2d3748;
+  margin: 0 0 0.5rem 0;
+}
+
+.db-card-price {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #2b6cb0;
+}
+
+.db-card-meta {
+  font-size: 0.875rem;
+  color: #718096;
+}
+
+.db-card-body {
+  padding: 0 1.25rem;
+  flex-grow: 1;
+}
+
+.db-card-description {
+  color: #4a5568;
+  font-size: 0.9375rem;
+  margin: 0.5rem 0;
+}
+
+.db-card-dates {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  margin: 0.5rem 0;
+}
+
+.db-date-item {
+  display: flex;
+  justify-content: space-between;
+}
+
+.db-date-label {
+  font-weight: 500;
+  color: #4a5568;
+  font-size: 0.875rem;
+}
+
+.db-date-value {
+  color: #718096;
+  font-size: 0.875rem;
+}
+
+.db-card-footer {
+  padding: 1rem 1.25rem;
+  border-top: 1px solid #edf2f7;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+/* Status Badges */
+.db-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.375rem 0.75rem;
+  border-radius: 50px;
+  font-size: 0.8125rem;
+  font-weight: 500;
+}
+
+.db-status-confirmed {
+  background-color: #c6f6d5;
+  color: #22543d;
+}
+
+.db-status-pending {
+  background-color: #feebc8;
+  color: #7b341e;
+}
+
+/* Pending Card Variation */
+.db-card-pending {
+  border-left: 4px solid #f6ad55;
+}
+
+/* Responsive */
 @media (max-width: 768px) {
-  .cards-container {
+  .db-section-header {
     flex-direction: column;
-    align-items: center;
+    align-items: flex-start;
   }
-
-  .card {
-    width: 90%;
+  
+  .db-cards-grid {
+    grid-template-columns: 1fr;
   }
 }

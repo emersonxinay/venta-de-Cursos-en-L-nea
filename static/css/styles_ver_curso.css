@@ -1,0 +1,659 @@
+/* Estilos base del curso */
+  #curso-detalle-container.curso-detalle {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem 1rem;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: #333;
+  }
+  
+  .curso-header {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2rem;
+    margin-bottom: 3rem;
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+    padding: 2rem;
+  }
+  
+  .curso-info {
+    flex: 1;
+    min-width: 300px;
+  }
+  
+  #curso-titulo.curso-titulo {
+    color: #2c3e50;
+    margin-bottom: 1rem;
+    font-weight: 700;
+    font-size: 2rem;
+  }
+  
+  #curso-descripcion.curso-descripcion {
+    color: #555;
+    margin-bottom: 1.5rem;
+    font-size: 1.1rem;
+    line-height: 1.6;
+  }
+  
+  .curso-meta-data {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+    margin-bottom: 1.5rem;
+  }
+  
+  .curso-categoria {
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    background-color: #3498db;
+    color: white;
+  }
+  
+  .curso-rating {
+    color: #f39c12;
+    font-size: 0.9rem;
+  }
+  
+  /* Tarjeta de compra */
+  #curso-compra-card.curso-compra-card {
+    width: 300px;
+    background: #f8f9fa;
+    padding: 1.5rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    border: 1px solid #e9ecef;
+  }
+  
+  .curso-precio-container {
+    margin-bottom: 1.5rem;
+    text-align: center;
+  }
+  
+  .curso-precio-actual {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #2c3e50;
+  }
+  
+  .curso-precio-original {
+    text-decoration: line-through;
+    color: #95a5a6;
+    margin-left: 0.5rem;
+    font-size: 1.2rem;
+  }
+  
+  .btn-comprar-curso {
+    display: block;
+    width: 100%;
+    padding: 12px;
+    background-color: #27ae60;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-weight: 600;
+    text-align: center;
+    transition: background-color 0.3s;
+    text-decoration: none;
+  }
+  
+  .btn-comprar-curso:hover {
+    background-color: #219653;
+  }
+  
+  .curso-garantia {
+    margin-top: 1rem;
+    font-size: 0.85rem;
+    color: #27ae60;
+    text-align: center;
+  }
+  
+  /* Contenido del curso */
+  .curso-contenido-wrapper {
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+    padding: 2rem;
+  }
+  
+  .curso-contenido-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    border-bottom: 1px solid #e9ecef;
+    padding-bottom: 1rem;
+  }
+  
+  .curso-contenido-titulo {
+    color: #2c3e50;
+    font-size: 1.5rem;
+  }
+  
+  .curso-progreso-container {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+  
+  .curso-progreso-bar {
+    width: 150px;
+    height: 8px;
+    background-color: #e9ecef;
+    border-radius: 4px;
+    overflow: hidden;
+  }
+  
+  .curso-progreso-fill {
+    height: 100%;
+    background-color: #27ae60;
+  }
+  
+  .curso-progreso-texto {
+    font-size: 0.9rem;
+    color: #7f8c8d;
+  }
+  
+  /* Certificado */
+  .btn-certificado {
+    background-color: #ffc107;
+    color: #333;
+    border: none;
+    padding: 8px 15px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 500;
+    margin-left: 15px;
+    transition: background-color 0.3s;
+  }
+  
+  .btn-certificado:hover {
+    background-color: #ffca28;
+  }
+  
+  .modal-certificado {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.7);
+  }
+  
+  .modal-contenido {
+    background-color: #fff;
+    margin: 5% auto;
+    padding: 2rem;
+    border-radius: 8px;
+    width: 80%;
+    max-width: 600px;
+    position: relative;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+  }
+  
+  .cerrar-modal {
+    position: absolute;
+    right: 1rem;
+    top: 1rem;
+    font-size: 1.5rem;
+    color: #aaa;
+    cursor: pointer;
+  }
+  
+  .cerrar-modal:hover {
+    color: #333;
+  }
+  
+  .certificado-datos {
+    margin: 1.5rem 0;
+    padding: 1rem;
+    background-color: #f8f9fa;
+    border-radius: 6px;
+  }
+  
+  .certificado-firma {
+    margin-top: 2rem;
+    text-align: right;
+    font-style: italic;
+  }
+  
+  .btn-descargar {
+    display: block;
+    width: 100%;
+    padding: 12px;
+    background-color: #3498db;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-weight: 500;
+    margin-top: 1.5rem;
+    cursor: pointer;
+    transition: background-color 0.3s;
+  }
+  
+  .btn-descargar:hover {
+    background-color: #2980b9;
+  }
+  
+  /* Secciones del curso */
+  #curso-secciones-container.curso-secciones {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+  
+  .curso-seccion-card {
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    padding: 1.5rem;
+    transition: all 0.3s ease;
+  }
+  
+  .curso-seccion-card:hover {
+    box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+  }
+  
+  .seccion-gratis {
+    border-left: 4px solid #27ae60;
+  }
+  
+  .seccion-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+  }
+  
+  .seccion-titulo {
+    font-size: 1.2rem;
+    margin-bottom: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: #2c3e50;
+  }
+  
+  .seccion-numero {
+    color: #7f8c8d;
+    font-weight: 600;
+  }
+  
+  .seccion-gratis-badge {
+    background-color: #27ae60;
+    color: white;
+    font-size: 0.7rem;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-weight: 700;
+  }
+  
+  .seccion-duracion {
+    color: #7f8c8d;
+    font-size: 0.9rem;
+  }
+  
+  .seccion-descripcion {
+    color: #555;
+    margin-bottom: 1.5rem;
+    line-height: 1.5;
+  }
+  
+  /* Contenido multimedia */
+  .seccion-video-container {
+    margin-bottom: 1.5rem;
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  
+  .seccion-video-container video, 
+  .seccion-video-container iframe {
+    width: 100%;
+    height: auto;
+    min-height: 400px;
+    background: #000;
+    border-radius: 6px;
+  }
+  
+  /* Barra de progreso de video */
+  .video-progreso-container {
+    margin-top: 10px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  
+  .video-progreso-bar {
+    flex-grow: 1;
+    height: 6px;
+    background-color: #e0e0e0;
+    border-radius: 3px;
+    overflow: hidden;
+    min-width: 100px;
+  }
+  
+  .video-progreso-fill {
+    height: 100%;
+    background-color: #4CAF50;
+    width: 0%;
+    transition: width 0.3s;
+  }
+  
+  .video-progreso-texto {
+    font-size: 0.8rem;
+    color: #666;
+    min-width: 60px;
+  }
+  
+  .video-completado {
+    display: none;
+  }
+  
+  .completado-label {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 0.9rem;
+    color: #666;
+    cursor: pointer;
+    padding: 5px 10px;
+    border-radius: 4px;
+    background-color: #f5f5f5;
+    transition: all 0.2s;
+  }
+  
+  .video-completado:checked + .completado-label {
+    background-color: #e8f5e9;
+    color: #2e7d32;
+  }
+  
+  /* Recursos */
+  .seccion-recursos {
+    background: #f8f9fa;
+    padding: 1rem;
+    border-radius: 8px;
+    margin-top: 1rem;
+  }
+  
+  .seccion-recursos h4 {
+    margin-bottom: 0.8rem;
+    color: #2c3e50;
+    font-size: 1.1rem;
+  }
+  
+  .recursos-lista {
+    list-style: none;
+    padding-left: 0;
+    margin-bottom: 0;
+  }
+  
+  .recurso-item {
+    margin-bottom: 0.5rem;
+  }
+  
+  .recurso-link {
+    color: #3498db;
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+  
+  .recurso-link:hover {
+    color: #2980b9;
+    text-decoration: underline;
+  }
+  
+  /* Contenido bloqueado */
+  .seccion-bloqueada {
+    text-align: center;
+    padding: 2rem;
+    background: #f8f9fa;
+    border-radius: 8px;
+    margin: 1rem 0;
+  }
+  
+  .bloqueado-icono {
+    font-size: 2rem;
+    color: #95a5a6;
+    margin-bottom: 1rem;
+  }
+  
+  .bloqueado-texto {
+    margin-bottom: 1.5rem;
+    color: #555;
+  }
+  
+  .btn-desbloquear {
+    display: inline-block;
+    padding: 8px 16px;
+    background-color: #3498db;
+    color: white;
+    border-radius: 4px;
+    text-decoration: none;
+    font-weight: 500;
+    transition: background-color 0.3s;
+  }
+  
+  .btn-desbloquear:hover {
+    background-color: #2980b9;
+    color: white;
+  }
+  
+  /* Acciones de administrador */
+  .seccion-admin-actions {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid #e9ecef;
+  }
+  
+  .btn-editar-seccion {
+    padding: 6px 12px;
+    background-color: transparent;
+    border: 1px solid #3498db;
+    color: #3498db;
+    border-radius: 4px;
+    font-size: 0.85rem;
+    transition: all 0.2s;
+  }
+  
+  .btn-editar-seccion:hover {
+    background-color: #3498db;
+    color: white;
+  }
+  
+  .btn-eliminar-seccion {
+    padding: 6px 12px;
+    background-color: transparent;
+    border: 1px solid #e74c3c;
+    color: #e74c3c;
+    border-radius: 4px;
+    font-size: 0.85rem;
+    transition: all 0.2s;
+  }
+  
+  .btn-eliminar-seccion:hover {
+    background-color: #e74c3c;
+    color: white;
+  }
+  
+
+  /* Estilos existentes... */
+
+  /* Ajustes específicos para lite-youtube */
+  lite-youtube {
+    background-color: #000;
+    position: relative;
+    display: block;
+    contain: content;
+    background-position: center center;
+    background-size: cover;
+    cursor: pointer;
+    border-radius: 8px;
+    overflow: hidden;
+    margin-bottom: 1rem;
+  }
+
+  /* Establece la relación de aspecto 16:9 */
+  lite-youtube::before {
+    content: '';
+    display: block;
+    padding-bottom: calc(100% / (16 / 9));
+  }
+
+  lite-youtube > iframe {
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+    border: 0;
+  }
+
+  /* Estilos para el botón de reproducción */
+  lite-youtube > .lty-playbtn {
+    width: 70px;
+    height: 46px;
+    background-color: #212121;
+    z-index: 1;
+    opacity: 0.8;
+    border-radius: 14%;
+    transition: all 0.2s cubic-bezier(0, 0, 0.2, 1);
+    border: 0;
+  }
+
+  lite-youtube:hover > .lty-playbtn {
+    background-color: #f00;
+    opacity: 1;
+  }
+
+  /* ... (otros estilos existentes) ... */
+
+  .video-progreso-container {
+    margin-top: 10px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px;
+    background: #f5f5f5;
+    border-radius: 4px;
+  }
+  
+  .video-progreso-bar {
+    flex-grow: 1;
+    height: 8px;
+    background-color: #e0e0e0;
+    border-radius: 4px;
+    overflow: hidden;
+  }
+  
+  .video-progreso-fill {
+    height: 100%;
+    background-color: #4CAF50;
+    width: 0%;
+    transition: width 0.3s ease;
+  }
+  
+  .video-progreso-texto {
+    font-size: 0.85rem;
+    color: #555;
+    min-width: 60px;
+    text-align: center;
+    font-weight: 500;
+  }
+  
+  .video-completado {
+    display: none;
+  }
+  
+  .completado-label {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    color: #666;
+    padding: 5px 10px;
+    border-radius: 4px;
+    background: #f0f0f0;
+    transition: all 0.2s;
+  }
+  
+  .completado-label:hover {
+    background: #e0e0e0;
+  }
+  
+  .completado-label i {
+    color: #4CAF50;
+  }
+  
+  .video-completado:checked + .completado-label {
+    font-weight: 600;
+    color: #2E7D32;
+    background: #E8F5E9;
+  }
+  
+  /* Estilos para los reproductores */
+  .seccion-video-container {
+    margin: 15px 0;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  }
+  
+  .seccion-video-container video,
+  .seccion-video-container iframe {
+    width: 100%;
+    aspect-ratio: 16/9;
+    background: #000;
+    display: block;
+  }
+  
+  .youtube-player-container,
+  .vimeo-player-container {
+    position: relative;
+    padding-bottom: 56.25%; /* 16:9 */
+    height: 0;
+    overflow: hidden;
+  }
+  
+  .youtube-player-container iframe,
+  .vimeo-player-container iframe {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+  }
+
+  /* Responsive */
+  @media (max-width: 768px) {
+    .curso-header {
+      flex-direction: column;
+    }
+    
+    #curso-compra-card.curso-compra-card {
+      width: 100%;
+    }
+    
+    .curso-contenido-header {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 1rem;
+    }
+    
+    .seccion-video-container video, 
+    .seccion-video-container iframe {
+      min-height: 250px;
+    }
+    
+    .modal-contenido {
+      width: 90%;
+      margin: 10% auto;
+    }
+  }
