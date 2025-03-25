@@ -124,6 +124,11 @@
                 method="POST"
                 action="{{ url_for('eliminar_curso', curso_id=curso.id) }}"
               >
+                <input
+                  type="hidden"
+                  name="csrf_token"
+                  value="{{ csrf_token() }}"
+                />
                 <button type="submit" class="btn btn-delete">Eliminar</button>
               </form>
             </td>
@@ -175,6 +180,11 @@
                 method="POST"
                 action="{{ url_for('eliminar_usuario', usuario_id=usuario.id) }}"
               >
+                <input
+                  type="hidden"
+                  name="csrf_token"
+                  value="{{ csrf_token() }}"
+                />
                 <button type="submit" class="btn btn-delete">Eliminar</button>
               </form>
             </td>
@@ -205,12 +215,14 @@
             method="POST"
             action="{{ url_for('confirmar_transferencia', venta_id=transferencia.id) }}"
           >
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
             <button type="submit" class="btn btn-success">Aprobar</button>
           </form>
           <form
             method="POST"
             action="{{ url_for('rechazar_transferencia', venta_id=transferencia.id) }}"
           >
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
             <button type="submit" class="btn btn-danger">Rechazar</button>
           </form>
         </div>
@@ -268,6 +280,11 @@
                 method="POST"
                 action="{{ url_for('quitar_acceso', venta_id=venta.id) }}"
               >
+                <input
+                  type="hidden"
+                  name="csrf_token"
+                  value="{{ csrf_token() }}"
+                />
                 <button type="submit" class="btn btn-warning">
                   Quitar Acceso
                 </button>
@@ -277,6 +294,11 @@
                 method="POST"
                 action="{{ url_for('activar_acceso', venta_id=venta.id) }}"
               >
+                <input
+                  type="hidden"
+                  name="csrf_token"
+                  value="{{ csrf_token() }}"
+                />
                 <button type="submit" class="btn btn-success">
                   Activar Acceso
                 </button>

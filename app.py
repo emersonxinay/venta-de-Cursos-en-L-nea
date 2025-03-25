@@ -1,12 +1,15 @@
 from datetime import datetime
 from flask_migrate import Migrate
-from flask import Flask, jsonify, render_template, redirect, url_for, request, flash
+from flask import Flask, current_app, jsonify, render_template, redirect, url_for, request, flash
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy.exc import SQLAlchemyError
 from flask_login import LoginManager, UserMixin, login_user, login_required, current_user, logout_user
+from sqlalchemy import func
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime, timedelta
 from werkzeug.utils import secure_filename
 from flask_wtf.csrf import CSRFProtect
+from extensions import db
 import stripe
 import paypalrestsdk
 from dotenv import load_dotenv
@@ -134,72 +137,77 @@ def actualizar_progreso_seccion():
         data = request.get_json()
         seccion_id = data.get('seccion_id')
         curso_id = data.get('curso_id')
-        # Procesamiento seguro del porcentaje
-        porcentaje_raw = data.get('porcentaje')
+
         try:
-            porcentaje = int(float(porcentaje_raw)) if porcentaje_raw not in [
-                None, ''] else 0
-            porcentaje = min(100, max(0, porcentaje))
+            porcentaje = min(100, max(0, int(data.get('porcentaje', 0))))
         except (ValueError, TypeError):
             porcentaje = 0
+
         if not all([seccion_id, curso_id]):
             return jsonify({'success': False, 'error': 'Datos incompletos'}), 400
-        # Verificar que la sección pertenezca al curso
-        seccion = Seccion.query.filter_by(
-            id=seccion_id, curso_id=curso_id).first()
-        if not seccion:
-            return jsonify({'success': False, 'error': 'Sección no encontrada'}), 404
-        # Buscar o crear registro de progreso
+
+        # Verificación más eficiente de relación sección-curso
+        if not db.session.query(Seccion.query.filter_by(id=seccion_id, curso_id=curso_id).exists()).scalar():
+            return jsonify({'success': False, 'error': 'Sección no encontrada en este curso'}), 404
+
+        # Buscar o crear registro de progreso (versión optimizada)
         progreso = ProgresoUsuario.query.filter_by(
             usuario_id=current_user.id,
             seccion_id=seccion_id
         ).first()
 
         if not progreso:
+            # Crear nuevo registro con valores iniciales
             progreso = ProgresoUsuario(
                 usuario_id=current_user.id,
                 seccion_id=seccion_id,
                 curso_id=curso_id,
-                progreso=porcentaje,
-                completado=(porcentaje >= 95),
-                ultima_actualizacion=datetime.utcnow()
+                progreso=0,  # Siempre inicia en 0
+                completado=False,
+                ultima_actualizacion=datetime.utcnow(),
+                tiempo_total_visto=0
             )
             db.session.add(progreso)
-        else:
+            # No hacemos flush() aquí a menos que necesitemos el ID inmediatamente
+
+        # Lógica de actualización mejorada
+        if porcentaje > progreso.progreso:
             progreso.progreso = porcentaje
-            if porcentaje >= 95:
-                progreso.completado = True
-                progreso.fecha_completado = datetime.utcnow()
             progreso.ultima_actualizacion = datetime.utcnow()
 
-        # Registrar en histórico
-        historico = HistoricoProgreso(
-            progreso_id=progreso.id,
-            progreso_anterior=progreso.progreso,
-            progreso_nuevo=porcentaje,
-            fecha_cambio=datetime.utcnow(),
-            tipo_cambio='actualizacion'
-        )
-        db.session.add(historico)
+            if porcentaje >= 95 and not progreso.completado:
+                progreso.completado = True
+                progreso.fecha_completado = datetime.utcnow()
+
+            # Incrementar tiempo visto (1 unidad por actualización)
+            progreso.tiempo_total_visto = progreso.tiempo_total_visto + 1
 
         db.session.commit()
 
-        # Calcular progreso del curso completo
-        progreso_curso = calcular_progreso_curso(curso_id, current_user.id)
-
-        # Verificar si se completó todo el curso
-        if progreso_curso >= 100:
-            verificar_curso_completado(curso_id, current_user.id)
+        # Calcular progreso del curso (versión optimizada)
+        progreso_curso = db.session.query(
+            func.coalesce(func.avg(ProgresoUsuario.progreso), 0.0)
+        ).filter(
+            ProgresoUsuario.curso_id == curso_id,
+            ProgresoUsuario.usuario_id == current_user.id
+        ).scalar() or 0
 
         return jsonify({
             'success': True,
-            'progreso_curso': progreso_curso,
-            'seccion_completada': progreso.completado
+            'progreso_curso': round(float(progreso_curso), 2),
+            'seccion_completada': progreso.completado,
+            'nuevo_progreso': porcentaje > progreso.progreso  # Indica si hubo actualización
         })
+
+    except SQLAlchemyError as e:
+        db.session.rollback()
+        current_app.logger.error(f"Error DB: {str(e)}", exc_info=True)
+        return jsonify({'success': False, 'error': 'Error en base de datos'}), 500
+
     except Exception as e:
         db.session.rollback()
-        app.logger.error(f"Error actualizando progreso: {str(e)}")
-        return jsonify({'success': False, 'error': 'Error interno del servidor'}), 500
+        current_app.logger.error(f"Error inesperado: {str(e)}", exc_info=True)
+        return jsonify({'success': False, 'error': 'Error interno'}), 500
 
 
 def calcular_progreso_curso(curso_id, usuario_id):
@@ -263,31 +271,46 @@ def get_progreso_curso():
     if not curso_id:
         return jsonify({'success': False, 'error': 'curso_id requerido'}), 400
 
-    # Obtener todas las secciones del curso con su progreso
-    secciones = db.session.query(
-        Seccion.id,
-        ProgresoUsuario.progreso,
-        ProgresoUsuario.tiempo_total_visto
-    ).outerjoin(
-        ProgresoUsuario,
-        (ProgresoUsuario.seccion_id == Seccion.id) &
-        (ProgresoUsuario.usuario_id == current_user.id)
-    ).filter(
-        Seccion.curso_id == curso_id
-    ).all()
+    try:
+        # Obtener todas las secciones del curso con su progreso
+        secciones = db.session.query(
+            Seccion.id,
+            func.coalesce(ProgresoUsuario.progreso, 0).label('progreso')
+        ).outerjoin(
+            ProgresoUsuario,
+            (ProgresoUsuario.seccion_id == Seccion.id) &
+            (ProgresoUsuario.usuario_id == current_user.id)
+        ).filter(
+            Seccion.curso_id == curso_id
+        ).all()
 
-    # Calcular progreso general del curso
-    progreso_curso = calcular_progreso_curso(curso_id, current_user.id)
-
-    return jsonify({
-        'success': True,
-        'progreso_curso': progreso_curso,
-        'secciones': [{
+        # Convertir a formato JSON
+        secciones_data = [{
             'id': s.id,
-            'progreso': float(s.progreso) if s.progreso else 0,
-            'tiempo_visto': s.tiempo_total_visto if s.tiempo_total_visto else 0
+            'progreso': float(s.progreso)
         } for s in secciones]
-    })
+
+        # Calcular progreso general del curso
+        total_secciones = len(secciones_data)
+        if total_secciones == 0:
+            return jsonify({
+                'success': True,
+                'progreso_curso': 0,
+                'secciones': []
+            })
+
+        suma_progresos = sum(s['progreso'] for s in secciones_data)
+        progreso_curso = round((suma_progresos / total_secciones), 2)
+
+        return jsonify({
+            'success': True,
+            'progreso_curso': progreso_curso,
+            'secciones': secciones_data
+        })
+
+    except Exception as e:
+        app.logger.error(f"Error obteniendo progreso: {str(e)}")
+        return jsonify({'success': False, 'error': 'Error interno'}), 500
 # error de pagina 404
 
 

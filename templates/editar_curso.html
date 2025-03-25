@@ -3,6 +3,7 @@
 content %}
 <h1>Editar Curso</h1>
 <form method="POST" action="{{ url_for('editar_curso', curso_id=curso.id) }}">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
   <label for="nombre">Nombre:</label>
   <input type="text" name="nombre" value="{{ curso.nombre }}" required />
   <br />

@@ -6,6 +6,7 @@ content %}
 <p>Precio: {{ curso.precio }} USD</p>
 
 <form method="POST" action="{{ url_for('comprar_curso', curso_id=curso.id) }}">
+  {{ form.hidden_tag() }}
   <label for="metodo">Método de Pago:</label>
   <select name="metodo" id="metodo" required onchange="mostrarFormularioPago()">
     <option value="">Seleccione un método de pago</option>

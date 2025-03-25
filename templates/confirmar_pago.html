@@ -6,6 +6,7 @@ content %}
 <p>Precio: {{ curso.precio }} USD</p>
 
 <form method="POST" action="{{ url_for('confirmar_pago', curso_id=curso.id) }}">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
   <input type="hidden" name="client_secret" value="{{ client_secret }}" />
   <label for="card-element">Tarjeta de Crédito o Débito:</label>
   <div id="card-element">

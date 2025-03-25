@@ -17,6 +17,7 @@
       method="POST"
       action="{{ url_for('rechazar_transferencia', venta_id=venta.id) }}"
     >
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
       <button type="submit">Rechazar Transferencia</button>
     </form>
   </li>

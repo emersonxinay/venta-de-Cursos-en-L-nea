@@ -3,6 +3,7 @@
 content %}
 <h1>Editar Sección</h1>
 <form method="POST">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
   <label for="titulo">Título:</label>
   <input type="text" name="titulo" value="{{ seccion.titulo }}" required />
   <br />

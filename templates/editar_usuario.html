@@ -6,6 +6,7 @@ content %}
   method="POST"
   action="{{ url_for('editar_usuario', usuario_id=usuario.id) }}"
 >
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
   <label for="nombre">Nombre:</label>
   <input type="text" name="nombre" value="{{ usuario.nombre }}" required />
   <br />

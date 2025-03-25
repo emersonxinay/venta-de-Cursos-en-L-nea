@@ -246,12 +246,30 @@ Cursos{% endblock %} {% block content %}
   </div>
   <script>
     document.addEventListener('DOMContentLoaded', function() {
-      // ... (código existente del modal del certificado) ...
-
-      // Objeto para controlar los reproductores
+      // Definir variables globales
+      const cursoId = {{ curso.id }};
       const players = {};
       const progressIntervals = {};
-      const videoProgressData = {}; // Almacena el progreso de cada video
+      const videoProgressData = {};
+      const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
+
+      // Función para cargar el progreso inicial desde el servidor
+      async function loadInitialProgress() {
+        try {
+          const response = await fetch(`/get_progreso_curso?curso_id=${cursoId}`);
+          const data = await response.json();
+
+          if (data.success) {
+            data.secciones.forEach(seccion => {
+              videoProgressData[seccion.id] = seccion.progreso || 0;
+              updateVideoProgressUI(seccion.id, seccion.progreso);
+            });
+            updateCourseProgressUI();
+          }
+        } catch (error) {
+          console.error('Error cargando progreso inicial:', error);
+        }
+      }
 
       // Función para calcular el progreso total del curso
       function calculateTotalProgress() {
@@ -259,19 +277,11 @@ Cursos{% endblock %} {% block content %}
         if (totalSections === 0) return 0;
 
         let totalProgress = 0;
-        let sectionsWithProgress = 0;
-
         for (const seccionId in videoProgressData) {
           totalProgress += videoProgressData[seccionId];
-          sectionsWithProgress++;
         }
 
-        // Si hay secciones sin progreso registrado, las contamos como 0%
-        if (sectionsWithProgress < totalSections) {
-          totalProgress += 0 * (totalSections - sectionsWithProgress);
-        }
-
-        return Math.round((totalProgress / totalSections) * 100) / 100;
+        return Math.round((totalProgress / totalSections) * 100);
       }
 
       // Función para actualizar la UI del progreso del curso
@@ -302,173 +312,139 @@ Cursos{% endblock %} {% block content %}
 
         if (progresoTexto) {
           progresoTexto.textContent = `${Math.round(porcentaje)}% visto`;
-          progresoTexto.style.color = porcentaje >= 95 ? '#2E7D32' : '#555';
         }
 
         if (checkbox) {
           checkbox.checked = porcentaje >= 95;
         }
 
-        // Actualizar el objeto de progreso
         videoProgressData[seccionId] = porcentaje;
-
-        // Actualizar el progreso general del curso
         updateCourseProgressUI();
       }
 
       // Función para actualizar el progreso en el servidor
-      function updateServerProgress(seccionId, porcentaje, cursoId) {
-        const endpoint = '/actualizar_progreso_seccion';
-        const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
-
-        fetch(endpoint, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': csrfToken
-            },
-            body: JSON.stringify({
-                seccion_id: seccionId,
-                curso_id: cursoId,
-                porcentaje: Math.round(porcentaje)
-            }),
-            credentials: 'same-origin'
-        }).then(response => response.json())
-          .then(data => {
-              if (data && data.success) {
-                  updateCourseProgressUI(data.progreso_curso);
-              }
-          }).catch(error => console.error('Error:', error));
-    }
-
-      // Función para manejar el checkbox de completado
-      function setupCompletionCheckbox(seccionId) {
-        const checkbox = document.getElementById(`completado-${seccionId}`);
-        if (checkbox) {
-          checkbox.addEventListener('change', function() {
-            const porcentaje = this.checked ? 100 : 0;
-            updateVideoProgressUI(seccionId, porcentaje);
-            updateServerProgress(seccionId, porcentaje);
-          });
-        }
+      function updateServerProgress(seccionId, porcentaje) {
+        fetch('/actualizar_progreso_seccion', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrfToken
+          },
+          body: JSON.stringify({
+            seccion_id: seccionId,
+            curso_id: cursoId,
+            porcentaje: Math.round(porcentaje)
+          })
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data && data.success) {
+            console.log('Progreso guardado:', data);
+          }
+        })
+        .catch(error => console.error('Error:', error));
       }
 
-      // Función para videos de YouTube (API iframe)
-      function setupYouTubePlayer(seccionId) {
-        const iframe = document.getElementById(`video-${seccionId}`);
-        if (!iframe || !iframe.src.includes('youtube.com')) return;
+      // Configurar el reproductor de YouTube
+      function setupYouTubePlayer(seccionId, videoId) {
+        players[seccionId] = new YT.Player(`player-${seccionId}`, {
+          videoId: videoId,
+          events: {
+            'onReady': (event) => {
+              console.log('Reproductor listo:', seccionId);
+            },
+            'onStateChange': (event) => {
+              const player = players[seccionId];
 
-        // Inicializar progreso a 0 si no existe
-        if (!videoProgressData[seccionId]) {
-          videoProgressData[seccionId] = 0;
-        }
+              if (event.data === YT.PlayerState.PLAYING) {
+                clearInterval(progressIntervals[seccionId]);
 
-        // Esperar a que la API de YouTube esté lista
-        function onYouTubeIframeAPIReady() {
-          players[`yt-${seccionId}`] = new YT.Player(iframe, {
-            events: {
-              'onReady': (event) => {
-                console.log('YouTube player ready');
-              },
-              'onStateChange': (event) => {
-                if (event.data === YT.PlayerState.PLAYING) {
-                  clearInterval(progressIntervals[`yt-${seccionId}`]);
+                progressIntervals[seccionId] = setInterval(() => {
+                  try {
+                    const duration = player.getDuration();
+                    const currentTime = player.getCurrentTime();
+                    const porcentaje = (currentTime / duration) * 100;
 
-                  progressIntervals[`yt-${seccionId}`] = setInterval(() => {
-                    const player = players[`yt-${seccionId}`];
-                    try {
-                      const duration = player.getDuration();
-                      const currentTime = player.getCurrentTime();
-                      const porcentaje = (currentTime / duration) * 100;
+                    updateVideoProgressUI(seccionId, porcentaje);
 
-                      updateVideoProgressUI(seccionId, porcentaje);
-
-                      // Actualizar servidor cada 10% de progreso o cuando se pausa
-                      if (porcentaje % 10 < 0.5 || event.data === YT.PlayerState.PAUSED) {
-                        updateServerProgress(seccionId, porcentaje);
-                      }
-                    } catch (e) {
-                      console.error('Error al obtener progreso YouTube:', e);
+                    // Guardar cada 10% de progreso o al llegar al 95%
+                    if (porcentaje % 10 < 0.5 || porcentaje >= 95) {
+                      updateServerProgress(seccionId, porcentaje);
                     }
-                  }, 1000);
-                } else if (event.data === YT.PlayerState.PAUSED ||
-                          event.data === YT.PlayerState.ENDED) {
-                  clearInterval(progressIntervals[`yt-${seccionId}`]);
-
-                  if (event.data === YT.PlayerState.ENDED) {
-                    updateVideoProgressUI(seccionId, 100);
-                    updateServerProgress(seccionId, 100);
+                  } catch (e) {
+                    console.error('Error al obtener progreso:', e);
                   }
-                }
+                }, 1000);
+              }
+              else if (event.data === YT.PlayerState.PAUSED) {
+                clearInterval(progressIntervals[seccionId]);
+                const currentTime = player.getCurrentTime();
+                const duration = player.getDuration();
+                const porcentaje = (currentTime / duration) * 100;
+                updateServerProgress(seccionId, porcentaje);
+              }
+              else if (event.data === YT.PlayerState.ENDED) {
+                clearInterval(progressIntervals[seccionId]);
+                updateVideoProgressUI(seccionId, 100);
+                updateServerProgress(seccionId, 100);
               }
             }
-          });
-        }
+          }
+        });
+      }
 
-        // Cargar la API de YouTube si no está cargada
-        if (typeof YT === 'undefined' || typeof YT.Player === 'undefined') {
+      // Inicializar todos los reproductores
+      function initializePlayers() {
+        // Para iframes de YouTube
+        document.querySelectorAll('.youtube-player-container').forEach(container => {
+          const seccionId = container.closest('.curso-seccion-card').id.split('-')[1];
+          const iframe = container.querySelector('iframe');
+
+          if (iframe && iframe.src.includes('youtube.com')) {
+            const videoId = iframe.src.split('v=')[1].split('&')[0];
+            container.innerHTML = `<div id="player-${seccionId}"></div>`;
+            setupYouTubePlayer(seccionId, videoId);
+          }
+        });
+
+        // Para lite-youtube
+        document.querySelectorAll('lite-youtube').forEach(yt => {
+          const seccionId = yt.closest('.curso-seccion-card').id.split('-')[1];
+          const videoId = yt.getAttribute('videoid');
+          yt.outerHTML = `<div id="player-${seccionId}"></div>`;
+          setupYouTubePlayer(seccionId, videoId);
+        });
+      }
+
+      // Cargar la API de YouTube
+      function loadYouTubeAPI() {
+        return new Promise((resolve) => {
+          if (typeof YT !== 'undefined' && YT.Player) {
+            resolve();
+            return;
+          }
+
           const tag = document.createElement('script');
           tag.src = "https://www.youtube.com/iframe_api";
           const firstScriptTag = document.getElementsByTagName('script')[0];
           firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
 
-          window.onYouTubeIframeAPIReady = function() {
-            onYouTubeIframeAPIReady();
-          };
-        } else {
-          onYouTubeIframeAPIReady();
-        }
-
-        setupCompletionCheckbox(seccionId);
+          window.onYouTubeIframeAPIReady = resolve;
+        });
       }
 
-      // Inicializar todos los reproductores de YouTube
-      document.querySelectorAll('iframe[id^="video-"]').forEach(iframe => {
-        if (iframe.src.includes('youtube.com')) {
-          const seccionId = iframe.id.split('-')[1];
-          setupYouTubePlayer(seccionId);
-        }
-      });
+      // Inicialización principal
+      async function init() {
+        await loadInitialProgress();
+        await loadYouTubeAPI();
+        initializePlayers();
+      }
 
-      // Manejar lite-youtube-embed (solución simplificada)
-      document.querySelectorAll('lite-youtube').forEach(yt => {
-        const seccionId = yt.closest('.curso-seccion-card').id.split('-')[1];
-
-        // Inicializar progreso a 0 si no existe
-        if (!videoProgressData[seccionId]) {
-          videoProgressData[seccionId] = 0;
-        }
-
-        setupCompletionCheckbox(seccionId);
-
-        // Escuchar clic en el botón de play para comenzar a rastrear
-        yt.addEventListener('click', function() {
-          // Simulamos progreso para lite-youtube (no podemos rastrear exactamente)
-          let simulatedProgress = 0;
-          const progressInterval = setInterval(() => {
-            if (simulatedProgress < 100) {
-              simulatedProgress += 5;
-              updateVideoProgressUI(seccionId, simulatedProgress);
-
-              if (simulatedProgress % 20 === 0) {
-                updateServerProgress(seccionId, simulatedProgress);
-              }
-            } else {
-              clearInterval(progressInterval);
-            }
-          }, 1000);
-        });
-      });
-
-      // Inicializar el progreso del curso al cargar la página
-      updateCourseProgressUI();
+      init();
     });
   </script>
 </div>
 {% endblock %} {% block scripts %}
-<!-- Agrega el JS de lite-youtube-embed -->
-<script src="https://cdn.jsdelivr.net/npm/lite-youtube-embed@0.2.0/src/lite-yt-embed.js"></script>
-
 <!-- API de YouTube -->
 <script src="https://www.youtube.com/iframe_api"></script>
 <!-- API de Vimeo -->
