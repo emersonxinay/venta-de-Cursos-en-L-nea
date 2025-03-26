@@ -1,0 +1,173 @@
+
+  /* Contenedor principal */
+  .curso-compra-container {
+      max-width: 800px;
+      margin: 2rem auto;
+      padding: 2rem;
+      background: #fff;
+      border-radius: 10px;
+      box-shadow: 0 2px 15px rgba(0, 0, 0, 0.1);
+  }
+
+  /* Encabezado */
+  .curso-compra-header {
+      margin-bottom: 2rem;
+      padding-bottom: 1.5rem;
+      border-bottom: 1px solid #eee;
+  }
+
+  .curso-compra-title {
+      color: #2c3e50;
+      font-size: 1.8rem;
+      margin-bottom: 1rem;
+  }
+
+  .curso-nombre {
+      color: #3498db;
+  }
+
+  .curso-compra-descripcion {
+      color: #7f8c8d;
+      line-height: 1.6;
+      margin-bottom: 1.5rem;
+  }
+
+  .curso-compra-precio {
+      display: flex;
+      align-items: center;
+      font-size: 1.2rem;
+  }
+
+  .precio-etiqueta {
+      color: #7f8c8d;
+      margin-right: 0.5rem;
+  }
+
+  .precio-valor {
+      color: #2ecc71;
+      font-weight: bold;
+      font-size: 1.4rem;
+  }
+
+  /* Formulario */
+  .curso-compra-form {
+      margin-bottom: 2rem;
+  }
+
+  .form-group-pago {
+      margin-bottom: 1.5rem;
+  }
+
+  .form-label-pago {
+      display: block;
+      margin-bottom: 0.5rem;
+      color: #2c3e50;
+      font-weight: 500;
+  }
+
+  .form-select-pago {
+      width: 100%;
+      padding: 0.75rem;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      background-color: #f9f9f9;
+      font-size: 1rem;
+      transition: border-color 0.3s;
+  }
+
+  .form-select-pago:focus {
+      outline: none;
+      border-color: #3498db;
+      background-color: #fff;
+  }
+
+  /* Botones de pago */
+  .metodo-pago-form {
+      margin-top: 1.5rem;
+  }
+
+  .btn-pago {
+      width: 100%;
+      padding: 1rem;
+      border: none;
+      border-radius: 5px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+  }
+
+  .btn-pago i {
+      margin-right: 0.75rem;
+      font-size: 1.2rem;
+  }
+
+  .stripe-btn {
+      background-color: #6772e5;
+      color: white;
+  }
+
+  .stripe-btn:hover {
+      background-color: #5469d4;
+  }
+
+  .paypal-btn {
+      background-color: #003087;
+      color: white;
+  }
+
+  .paypal-btn:hover {
+      background-color: #00297A;
+  }
+
+  .transferencia-btn {
+      background-color: #2980b9;
+      color: white;
+  }
+
+  .transferencia-btn:hover {
+      background-color: #2472a4;
+  }
+
+  /* Sección de garantía */
+  .curso-compra-garantia {
+      display: flex;
+      align-items: center;
+      padding: 1.5rem;
+      background-color: #f8f9fa;
+      border-radius: 8px;
+      border-left: 4px solid #2ecc71;
+  }
+
+  .garantia-icono {
+      margin-right: 1.5rem;
+      color: #2ecc71;
+      font-size: 2rem;
+  }
+
+  .garantia-titulo {
+      color: #2c3e50;
+      font-size: 1.1rem;
+      margin-bottom: 0.5rem;
+  }
+
+  .garantia-descripcion {
+      color: #7f8c8d;
+      margin: 0;
+      line-height: 1.5;
+  }
+
+  /* Responsive */
+  @media (max-width: 768px) {
+      .curso-compra-container {
+          padding: 1.5rem;
+          margin: 1rem;
+      }
+
+      .curso-compra-title {
+          font-size: 1.5rem;
+      }
+  }

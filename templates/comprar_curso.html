@@ -1,43 +1,92 @@
-<!-- filepath: /Users/emerson/Desktop/Todo_Mac/proyectos_python/venta_cursos_pagos/templates/comprar_curso.html -->
 {% extends "base.html" %} {% block title %}Comprar Curso{% endblock %} {% block
 content %}
-<h1>Comprar Curso: {{ curso.nombre }}</h1>
-<p>Descripción: {{ curso.descripcion }}</p>
-<p>Precio: {{ curso.precio }} USD</p>
-
-<form method="POST" action="{{ url_for('comprar_curso', curso_id=curso.id) }}">
-  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
-  <label for="metodo">Método de Pago:</label>
-  <select name="metodo" id="metodo" required onchange="mostrarFormularioPago()">
-    <option value="">Seleccione un método de pago</option>
-    <option value="stripe">Stripe</option>
-    <option value="paypal">PayPal</option>
-    <option value="transferencia">Transferencia Bancaria</option>
-  </select>
-  <br />
-  <label for="duracion">Duración del Acceso:</label>
-  <select name="duracion" required>
-    <option value="1_mes">1 Mes</option>
-    <option value="6_meses">6 Meses</option>
-    <option value="1_ano">1 Año</option>
-  </select>
-  <br />
-
-  <!-- Formulario de Stripe -->
-  <div id="stripe-form" style="display: none;">
-    <button type="submit">Pagar con Stripe</button>
+<div class="curso-compra-container">
+  <div class="curso-compra-header">
+    <h1 class="curso-compra-title">
+      Comprar Curso: <span class="curso-nombre">{{ curso.nombre }}</span>
+    </h1>
+    <p class="curso-compra-descripcion">{{ curso.descripcion }}</p>
+    <div class="curso-compra-precio">
+      <span class="precio-etiqueta">Precio:</span>
+      <span class="precio-valor">{{ curso.precio }} USD</span>
+    </div>
   </div>
 
-  <!-- Formulario de PayPal -->
-  <div id="paypal-form" style="display: none;">
-    <button type="submit">Pagar con PayPal</button>
+  <div class="curso-compra-form">
+    <form
+      method="POST"
+      action="{{ url_for('comprar_curso', curso_id=curso.id) }}"
+      class="payment-form"
+    >
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+
+      <div class="form-group-pago">
+        <label for="metodo" class="form-label-pago">Método de Pago:</label>
+        <select
+          name="metodo"
+          id="metodo"
+          class="form-select-pago"
+          required
+          onchange="mostrarFormularioPago()"
+        >
+          <option value="">Seleccione un método de pago</option>
+          <option value="stripe">Stripe</option>
+          <option value="paypal">PayPal</option>
+          <option value="transferencia">Transferencia Bancaria</option>
+        </select>
+      </div>
+
+      <div class="form-group-pago">
+        <label for="duracion" class="form-label-pago"
+          >Duración del Acceso:</label
+        >
+        <select name="duracion" id="duracion" class="form-select-pago" required>
+          <option value="1_mes">1 Mes</option>
+          <option value="6_meses">6 Meses</option>
+          <option value="1_ano">1 Año</option>
+        </select>
+      </div>
+
+      <!-- Formulario de Stripe -->
+      <div id="stripe-form" class="metodo-pago-form" style="display: none;">
+        <button type="submit" class="btn-pago stripe-btn">
+          <i class="fab fa-cc-stripe"></i> Pagar con Stripe
+        </button>
+      </div>
+
+      <!-- Formulario de PayPal -->
+      <div id="paypal-form" class="metodo-pago-form" style="display: none;">
+        <button type="submit" class="btn-pago paypal-btn">
+          <i class="fab fa-paypal"></i> Pagar con PayPal
+        </button>
+      </div>
+
+      <!-- Formulario de Transferencia Bancaria -->
+      <div
+        id="transferencia-form"
+        class="metodo-pago-form"
+        style="display: none;"
+      >
+        <button type="submit" class="btn-pago transferencia-btn">
+          <i class="fas fa-university"></i> Pagar con Transferencia Bancaria
+        </button>
+      </div>
+    </form>
   </div>
 
-  <!-- Formulario de Transferencia Bancaria -->
-  <div id="transferencia-form" style="display: none;">
-    <button type="submit">Pagar con Transferencia Bancaria</button>
+  <div class="curso-compra-garantia">
+    <div class="garantia-icono">
+      <i class="fas fa-shield-alt"></i>
+    </div>
+    <div class="garantia-texto">
+      <h3 class="garantia-titulo">Invierte en quien serás mañana</h3>
+      <p class="garantia-descripcion">
+        El mejor proyecto en el que trabajarás siempre serás tú. Esta es tu
+        próxima gran inversión.
+      </p>
+    </div>
   </div>
-</form>
+</div>
 
 <script>
   function mostrarFormularioPago() {
@@ -55,4 +104,5 @@ content %}
     }
   }
 </script>
+
 {% endblock %}

@@ -449,7 +449,7 @@ def stripe_success(curso_id):
     if session.payment_status == 'paid':
         venta = Venta(
             usuario_id=current_user.id,
-            curso_id=curso.id,
+            curso_id=curso_id,
             metodo_pago='stripe',
             estado_transferencia='confirmada',
             # Ejemplo de duración de 1 año
@@ -458,17 +458,18 @@ def stripe_success(curso_id):
         db.session.add(venta)
         db.session.commit()
         flash('Pago realizado exitosamente.')
-        return redirect(url_for('ver_curso', curso_id=curso.id))
+        return redirect(url_for('ver_curso', curso_id=curso_id))
     else:
         flash('Error en el pago con Stripe.')
-        return redirect(url_for('comprar_curso', curso_id=curso.id))
+        return redirect(url_for('comprar_curso', curso_id=curso_id))
 
 
 @app.route('/stripe_cancel/<int:curso_id>')
 @login_required
 def stripe_cancel(curso_id):
-    flash('Pago cancelado.')
-    return redirect(url_for('comprar_curso', curso_id=Curso.id))
+    curso = Curso.query.get_or_404(curso_id)
+    flash(f'Pago cancelado para el curso: {curso.nombre}')
+    return redirect(url_for('comprar_curso', curso_id=curso_id))
 
 
 def procesar_pago_paypal(precio, return_url, cancel_url):
