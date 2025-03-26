@@ -17,6 +17,20 @@ Este proyecto es una aplicación web para la venta de cursos en línea. Los usua
   - Crear, editar y eliminar cursos.
   - Crear, editar y eliminar secciones de los cursos.
   - Ver y gestionar transferencias pendientes.
+  
+# demo img 
+### dashboard administración
+<img src="./static/img/image.png" />
+
+### dashboard usuarios
+<img src="./static/img/dashboard_usuarios.png" />
+
+### metodo de pago curso
+<img src="./static/img/pago_curso.png" />
+
+
+
+
 
 ## Instalación
 
