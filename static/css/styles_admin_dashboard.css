@@ -319,6 +319,7 @@ canvas {
 
 /* Responsive */
 /* Responsive Mejorado */
+/* Responsive Mejorado */
 
 /* Tablets */
 @media (max-width: 1024px) {
@@ -397,119 +398,25 @@ canvas {
 
 /* Móviles pequeños */
 @media (max-width: 480px) {
-  /* Espaciado general */
-  body {
-    padding: 1rem;
+  h1 {
+    font-size: 1.6rem;
+  }
+
+  h2 {
+    font-size: 1.2rem;
+  }
+
+  .btn {
+    padding: 5px 8px;
+    font-size: 0.8rem;
+  }
+
+  .net-sales-item h4 {
+    font-size: 0.9rem;
+  }
+
+  .search-input {
+    padding: 8px 12px 8px 35px;
     font-size: 14px;
-  }
-
-  /* Títulos de sección */
-  .section-title {
-    font-size: 1.1rem;
-    font-weight: 600;
-    margin-top: 1.5rem;
-    margin-bottom: 0.5rem;
-    border-left: 4px solid #4f46e5;
-    padding-left: 0.5rem;
-    background: #f3f4f6;
-  }
-
-  /* Contenedores visuales */
-  .section-container,
-  .card {
-    background: white;
-    padding: 1rem;
-    border-radius: 0.75rem;
-    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
-    margin-bottom: 1rem;
-  }
-
-  .card-header {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    margin-bottom: 0.5rem;
-    font-weight: bold;
-  }
-
-  /* Botones adaptables */
-  .btn,
-  button {
-    display: block;
-    width: 100%;
-    margin-bottom: 0.5rem;
-    font-size: 14px;
-    padding: 0.5rem;
-  }
-
-  /* Botones agrupados (si hay varios juntos) */
-  .btn-group {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-  }
-
-  /* Tablas responsivas usando data-label */
-  .table-wrapper {
-    overflow-x: auto;
-  }
-
-  table {
-    width: 100%;
-    border-collapse: collapse;
-  }
-
-  .data-table thead {
-    display: none;
-  }
-
-  .data-table tr {
-    display: block;
-    margin-bottom: 1rem;
-    border-bottom: 1px solid #e5e7eb;
-    padding-bottom: 0.5rem;
-  }
-
-  .data-table td {
-    display: flex;
-    justify-content: space-between;
-    padding: 0.5rem 0;
-  }
-
-  .data-table td::before {
-    content: attr(data-label);
-    font-weight: 600;
-    color: #6b7280;
-    margin-right: 10px;
-    min-width: 100px;
-  }
-
-  /* Imágenes y gráficos */
-  img,
-  canvas,
-  svg {
-    max-width: 100%;
-    height: auto;
-  }
-
-  /* Footer */
-  footer {
-    text-align: center;
-    font-size: 12px;
-    padding: 1rem 0;
-    color: #9ca3af;
-  }
-
-  /* Gráficos y barras */
-  .chart-container {
-    overflow-x: auto;
-  }
-
-  /* Texto pequeño para tablas y etiquetas */
-  .small-text {
-    font-size: 12px;
-    color: #6b7280;
   }
 }
-
-

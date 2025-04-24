@@ -141,3 +141,54 @@ header {
     margin-left: 0; /* Elimina el margen en dispositivos móviles */
   }
 }
+/* Extra responsive para móviles pequeños (≤480px) */
+@media (max-width: 480px) {
+  .top-bar {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 8px 12px;
+  }
+
+  .logo-container {
+    margin-left: 0;
+  }
+
+  .logo {
+    font-size: 1rem;
+  }
+
+  .user-info {
+    font-size: 0.85rem;
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    margin-top: 8px;
+  }
+
+  .user-info a {
+    margin: 5px 5px 0 0;
+    font-size: 0.85rem;
+  }
+
+  .menu-toggle {
+    top: 10px;
+    left: 10px;
+    padding: 6px;
+  }
+
+  .menu-toggle span {
+    width: 22px;
+    height: 2px;
+  }
+
+  .sidebar {
+    width: 220px;
+    padding-top: 50px;
+  }
+
+  .sidebar ul li a {
+    padding: 12px 15px;
+    font-size: 0.9rem;
+  }
+}
