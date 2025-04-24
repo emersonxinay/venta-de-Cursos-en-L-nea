@@ -1,10 +1,69 @@
-<!-- filepath: /Users/emerson/Desktop/Todo_Mac/proyectos_python/venta_cursos_pagos/templates/base.html -->
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
   <head>
+    <!-- Codificación de caracteres -->
     <meta charset="UTF-8" />
+
+    <!-- Configuración responsive para dispositivos móviles -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>{% block title %}Cursos Online -CompilandoCode{% endblock %}</title>
+
+    <!-- Título dinámico de la página -->
+    <title>{% block title %}Cursos Online - CompilandoCode{% endblock %}</title>
+
+    <!-- Descripción SEO dinámica para cada página -->
+    <meta
+      name="description"
+      content="{% block description %}Aprende programación y tecnología con nuestros cursos online en CompilandoCode.{% endblock %}"
+    />
+
+    <!-- Palabras clave para motores de búsqueda (SEO) -->
+    <meta
+      name="keywords"
+      content="{% block keywords %}cursos online, programación, Python, Flask, React, tecnología{% endblock %}"
+    />
+
+    <!-- Metaetiquetas Open Graph para compartir en redes sociales -->
+    <meta
+      property="og:title"
+      content="{% block og_title %}Cursos Online - CompilandoCode{% endblock %}"
+    />
+    <meta
+      property="og:description"
+      content="{% block og_description %}Aprende programación con cursos de calidad en CompilandoCode.{% endblock %}"
+    />
+    <meta
+      property="og:image"
+      content="{% block og_image %}https://tudominio.com/static/img/preview.jpg{% endblock %}"
+    />
+    <meta
+      property="og:url"
+      content="{% block og_url %}https://tudominio.com{% endblock %}"
+    />
+    <meta property="og:type" content="website" />
+
+    <!-- Twitter Card para mejorar visualización al compartir -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta
+      name="twitter:title"
+      content="{% block twitter_title %}Cursos Online - CompilandoCode{% endblock %}"
+    />
+    <meta
+      name="twitter:description"
+      content="{% block twitter_description %}Aprende desde casa con nuestros cursos prácticos y actualizados.{% endblock %}"
+    />
+    <meta
+      name="twitter:image"
+      content="{% block twitter_image %}https://tudominio.com/static/img/preview.jpg{% endblock %}"
+    />
+
+    <!-- Favicon del sitio web -->
+    <link
+      rel="icon"
+      href="{{ url_for('static', filename='img/favicon.png') }}"
+      type="image/png"
+    />
+
+    <!-- Hojas de estilo (CSS) -->
     <link
       rel="stylesheet"
       href="{{ url_for('static', filename='css/styles_dashboard.css') }}"
@@ -17,7 +76,6 @@
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
     />
-
     <link
       rel="stylesheet"
       href="{{ url_for('static', filename='css/styles_footer.css') }}"
@@ -35,16 +93,20 @@
       href="{{ url_for('static', filename='css/styles_navbar.css') }}"
     />
     <link
-      href="{{ url_for('static', filename='css/styles.css') }}"
       rel="stylesheet"
+      href="{{ url_for('static', filename='css/styles.css') }}"
     />
 
-    <!-- Incluir Chart.js -->
+    <!-- Librería Chart.js para gráficas -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   </head>
+
   <body>
+    <!-- Barra de navegación compartida -->
     {% include "shared/navbar.html" %}
+
     <main>
+      <!-- Mensajes flash para notificaciones -->
       {% with messages = get_flashed_messages(with_categories=true) %} {% if
       messages %}
       <ul class="flashes">
@@ -52,21 +114,25 @@
         <li class="{{ category }}">{{ message }}</li>
         {% endfor %}
       </ul>
-      {% endif %} {% endwith %} {% block content %}{% endblock %}
+      {% endif %} {% endwith %}
+
+      <!-- Contenido dinámico principal -->
+      {% block content %}{% endblock %}
     </main>
 
+    <!-- Pie de página compartido -->
     {% include "shared/footer.html" %}
 
+    <!-- Token CSRF para seguridad en formularios -->
     <meta name="csrf-token" content="{{ csrf_token() }}" />
 
-    <!-- Cdn script para ver youtube -->
-    <!-- Agrega el JS de lite-youtube-embed -->
+    <!-- Script para embeber videos de YouTube de forma liviana -->
     <script src="https://cdn.jsdelivr.net/npm/lite-youtube-embed@0.2.0/src/lite-yt-embed.js"></script>
 
-    <!-- Player API de YouTube -->
+    <!-- API oficial de YouTube para reproductores -->
     <script src="https://www.youtube.com/iframe_api"></script>
 
-    <!-- Player API de Vimeo -->
+    <!-- API oficial de Vimeo para reproductores -->
     <script src="https://player.vimeo.com/api/player.js"></script>
   </body>
 </html>
