@@ -28,6 +28,12 @@ class CursoRoutes:
                 secciones = self.Seccion.query.filter_by(
                     curso_id=curso_id).order_by(self.Seccion.id).all()
                 
+                # DEBUG: Log para producción
+                import logging
+                logging.info(f"DEBUG: Curso {curso_id} - {curso.nombre}")
+                logging.info(f"DEBUG: Secciones encontradas: {len(secciones)}")
+                logging.info(f"DEBUG: Usuario autenticado: {current_user.is_authenticated if current_user else 'No current_user'}")
+                
                 venta_confirmada = None
                 venta_pendiente = None
                 
@@ -68,11 +74,18 @@ class CursoRoutes:
                         seccion.es_preview_gratis = True
                         seccion.es_accesible = True
                         seccion.es_bloqueado = False
+                        logging.info(f"DEBUG: Sección {i+1} ({seccion.titulo}) - PREVIEW GRATIS")
                     else:
                         # Las demás solo accesibles si tiene acceso completo
                         seccion.es_preview_gratis = False
                         seccion.es_accesible = tiene_acceso_completo
                         seccion.es_bloqueado = not tiene_acceso_completo
+                        logging.info(f"DEBUG: Sección {i+1} ({seccion.titulo}) - {'ACCESIBLE' if tiene_acceso_completo else 'BLOQUEADO'}")
+                
+                logging.info(f"DEBUG: MAX_PREVIEW_SECTIONS: {MAX_PREVIEW_SECTIONS}")
+                logging.info(f"DEBUG: tiene_acceso_completo: {tiene_acceso_completo}")
+                logging.info(f"DEBUG: es_admin: {es_admin}")
+                logging.info(f"DEBUG: tiene_venta_confirmada: {tiene_venta_confirmada}")
                 
                 return render_template(
                     'ver_curso.html', 
@@ -191,3 +204,64 @@ class CursoRoutes:
                 self.db.session.commit()
                 flash('Curso eliminado exitosamente.')
                 return redirect(url_for('admin_dashboard'))
+
+        @self.app.route('/debug/curso/<int:curso_id>')
+        def debug_curso(curso_id):
+            """Ruta de debug para producción"""
+            with self.flask_app.app_context():
+                import os
+                
+                debug_info = {
+                    'curso_id': curso_id,
+                    'flask_env': os.getenv('FLASK_ENV', 'not_set'),
+                    'database_url': os.getenv('DATABASE_URL', 'not_set')[:50] + '...' if os.getenv('DATABASE_URL') else 'not_set',
+                    'user_authenticated': current_user.is_authenticated if current_user else False,
+                    'user_role': getattr(current_user, 'rol', 'not_available') if current_user and current_user.is_authenticated else 'not_authenticated'
+                }
+                
+                try:
+                    curso = self.Curso.query.get_or_404(curso_id)
+                    secciones = self.Seccion.query.filter_by(curso_id=curso_id).all()
+                    
+                    debug_info.update({
+                        'curso_nombre': curso.nombre,
+                        'curso_precio': curso.precio,
+                        'total_secciones': len(secciones),
+                        'secciones': []
+                    })
+                    
+                    for i, seccion in enumerate(secciones):
+                        seccion_info = {
+                            'index': i + 1,
+                            'titulo': seccion.titulo,
+                            'video_url': seccion.video_url,
+                            'video_file': seccion.video_file,
+                            'es_preview': i < 2  # Las primeras 2 son preview
+                        }
+                        debug_info['secciones'].append(seccion_info)
+                    
+                    # Lógica de acceso
+                    venta_confirmada = None
+                    if current_user.is_authenticated:
+                        venta_confirmada = self.Venta.query.filter_by(
+                            usuario_id=current_user.id, 
+                            curso_id=curso_id, 
+                            estado_transferencia='confirmada'
+                        ).first()
+                    
+                    es_admin = current_user.is_authenticated and hasattr(current_user, 'rol') and current_user.rol == 'admin'
+                    tiene_venta_confirmada = venta_confirmada is not None
+                    tiene_acceso_completo = es_admin or tiene_venta_confirmada
+                    
+                    debug_info.update({
+                        'venta_confirmada': venta_confirmada is not None,
+                        'es_admin': es_admin,
+                        'tiene_acceso_completo': tiene_acceso_completo,
+                        'max_preview_sections': 2
+                    })
+                    
+                except Exception as e:
+                    debug_info['error'] = str(e)
+                
+                from flask import jsonify
+                return jsonify(debug_info)
