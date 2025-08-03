@@ -324,13 +324,34 @@
             <div class="video-container bg-gray-900 rounded-lg overflow-hidden mb-4">
               {% if seccion.video_url %}
                 {% if 'youtube.com' in seccion.video_url or 'youtu.be' in seccion.video_url %}
-                  {% set video_id = seccion.video_url.split('v=')[1].split('&')[0] if 'v=' in seccion.video_url else seccion.video_url.split('/')[-1] %}
-                  <div class="youtube-player-container aspect-video">
-                    <lite-youtube
-                      videoid="{{ video_id }}"
-                      params="rel=0"
-                      style="background-image: url('https://i.ytimg.com/vi/{{ video_id }}/hqdefault.jpg'); width: 100%; height: 100%;"
-                    ></lite-youtube>
+                  {% if 'v=' in seccion.video_url %}
+                    {% set video_id = seccion.video_url.split('v=')[1].split('&')[0] %}
+                  {% elif 'youtu.be/' in seccion.video_url %}
+                    {% set video_id = seccion.video_url.split('youtu.be/')[1].split('?')[0] %}
+                  {% else %}
+                    {% set video_id = seccion.video_url.split('/')[-1] %}
+                  {% endif %}
+                  <div class="aspect-video">
+                    <iframe
+                      src="https://www.youtube.com/embed/{{ video_id }}?rel=0&modestbranding=1"
+                      frameborder="0"
+                      allowfullscreen
+                      id="video-{{ seccion.id }}"
+                      class="w-full h-full"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    ></iframe>
+                  </div>
+                {% elif 'vimeo.com' in seccion.video_url %}
+                  {% set video_id = seccion.video_url.split('/')[-1] %}
+                  <div class="aspect-video">
+                    <iframe
+                      src="https://player.vimeo.com/video/{{ video_id }}"
+                      frameborder="0"
+                      allowfullscreen
+                      id="video-{{ seccion.id }}"
+                      class="w-full h-full"
+                      allow="autoplay; fullscreen; picture-in-picture"
+                    ></iframe>
                   </div>
                 {% else %}
                   <div class="aspect-video">
@@ -527,7 +548,7 @@
 
       // Función para calcular el progreso total del curso
       function calculateTotalProgress() {
-        const totalSections = document.querySelectorAll('.curso-seccion-card').length;
+        const totalSections = document.querySelectorAll('[id^="seccion-"]').length;
         if (totalSections === 0) return 0;
 
         let totalProgress = 0;
@@ -535,7 +556,7 @@
           totalProgress += videoProgressData[seccionId];
         }
 
-        return Math.round((totalProgress / totalSections) * 100);
+        return Math.round(totalProgress / totalSections);
       }
 
       // Función para actualizar la UI del progreso del curso
@@ -599,109 +620,87 @@
         .catch(error => console.error('Error:', error));
       }
 
-      // Configurar el reproductor de YouTube
-      function setupYouTubePlayer(seccionId, videoId) {
-        players[seccionId] = new YT.Player(`player-${seccionId}`, {
-          videoId: videoId,
-          events: {
-            'onReady': (event) => {
-              console.log('Reproductor listo:', seccionId);
-            },
-            'onStateChange': (event) => {
-              const player = players[seccionId];
+      // Función para manejar el progreso manual de checkboxes
+      function setupProgressCheckboxes() {
+        document.querySelectorAll('.video-completado').forEach(checkbox => {
+          checkbox.addEventListener('change', function() {
+            const seccionId = this.id.split('-')[1];
+            const porcentaje = this.checked ? 100 : 0;
+            
+            updateVideoProgressUI(seccionId, porcentaje);
+            updateServerProgress(seccionId, porcentaje);
+          });
+        });
+      }
 
-              if (event.data === YT.PlayerState.PLAYING) {
-                clearInterval(progressIntervals[seccionId]);
-
-                progressIntervals[seccionId] = setInterval(() => {
-                  try {
-                    const duration = player.getDuration();
-                    const currentTime = player.getCurrentTime();
-                    const porcentaje = (currentTime / duration) * 100;
-
-                    updateVideoProgressUI(seccionId, porcentaje);
-
-                    // Guardar cada 10% de progreso o al llegar al 95%
-                    if (porcentaje % 10 < 0.5 || porcentaje >= 95) {
-                      updateServerProgress(seccionId, porcentaje);
-                    }
-                  } catch (e) {
-                    console.error('Error al obtener progreso:', e);
-                  }
-                }, 1000);
-              }
-              else if (event.data === YT.PlayerState.PAUSED) {
-                clearInterval(progressIntervals[seccionId]);
-                const currentTime = player.getCurrentTime();
-                const duration = player.getDuration();
-                const porcentaje = (currentTime / duration) * 100;
-                updateServerProgress(seccionId, porcentaje);
-              }
-              else if (event.data === YT.PlayerState.ENDED) {
-                clearInterval(progressIntervals[seccionId]);
-                updateVideoProgressUI(seccionId, 100);
-                updateServerProgress(seccionId, 100);
-              }
-            }
+      // Función para manejar reproductores de video estándar (HTML5)
+      function setupVideoPlayer(video) {
+        const seccionId = video.id.split('-')[1];
+        
+        video.addEventListener('timeupdate', function() {
+          const porcentaje = (this.currentTime / this.duration) * 100;
+          updateVideoProgressUI(seccionId, porcentaje);
+          
+          // Guardar progreso cada 10%
+          if (Math.floor(porcentaje) % 10 === 0) {
+            updateServerProgress(seccionId, porcentaje);
           }
+        });
+        
+        video.addEventListener('ended', function() {
+          updateVideoProgressUI(seccionId, 100);
+          updateServerProgress(seccionId, 100);
         });
       }
 
       // Inicializar todos los reproductores
       function initializePlayers() {
-        // Para iframes de YouTube
-        document.querySelectorAll('.youtube-player-container').forEach(container => {
-          const seccionId = container.closest('.curso-seccion-card').id.split('-')[1];
-          const iframe = container.querySelector('iframe');
-
-          if (iframe && iframe.src.includes('youtube.com')) {
-            const videoId = iframe.src.split('v=')[1].split('&')[0];
-            container.innerHTML = `<div id="player-${seccionId}"></div>`;
-            setupYouTubePlayer(seccionId, videoId);
-          }
+        // Para videos HTML5 (archivos locales)
+        document.querySelectorAll('video[id^="video-"]').forEach(video => {
+          setupVideoPlayer(video);
         });
-
-        // Para lite-youtube
-        document.querySelectorAll('lite-youtube').forEach(yt => {
-          const seccionId = yt.closest('.curso-seccion-card').id.split('-')[1];
-          const videoId = yt.getAttribute('videoid');
-          yt.outerHTML = `<div id="player-${seccionId}"></div>`;
-          setupYouTubePlayer(seccionId, videoId);
-        });
-      }
-
-      // Cargar la API de YouTube
-      function loadYouTubeAPI() {
-        return new Promise((resolve) => {
-          if (typeof YT !== 'undefined' && YT.Player) {
-            resolve();
-            return;
-          }
-
-          const tag = document.createElement('script');
-          tag.src = "https://www.youtube.com/iframe_api";
-          const firstScriptTag = document.getElementsByTagName('script')[0];
-          firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
-
-          window.onYouTubeIframeAPIReady = resolve;
+        
+        // Para iframes (YouTube, Vimeo, etc.)
+        document.querySelectorAll('iframe[id^="video-"]').forEach(iframe => {
+          const seccionId = iframe.id.split('-')[1];
+          
+          // Simular progreso para iframes (ya que no podemos acceder al contenido)
+          iframe.addEventListener('load', function() {
+            console.log(`Video cargado para sección ${seccionId}`);
+          });
         });
       }
 
       // Inicialización principal
       async function init() {
         await loadInitialProgress();
-        await loadYouTubeAPI();
         initializePlayers();
+        setupProgressCheckboxes();
       }
 
       init();
+      
+      // Modal de certificado
+      const btnVerCertificado = document.getElementById('btn-ver-certificado');
+      const modalCertificado = document.getElementById('modal-certificado');
+      const cerrarModal = document.getElementById('cerrar-modal');
+      
+      if (btnVerCertificado && modalCertificado) {
+        btnVerCertificado.addEventListener('click', () => {
+          modalCertificado.classList.remove('hidden');
+        });
+        
+        cerrarModal.addEventListener('click', () => {
+          modalCertificado.classList.add('hidden');
+        });
+        
+        modalCertificado.addEventListener('click', (e) => {
+          if (e.target === modalCertificado) {
+            modalCertificado.classList.add('hidden');
+          }
+        });
+      }
     });
   </script>
 </div>
-{% endblock %} {% block scripts %}
-<!-- API de YouTube -->
-<script src="https://www.youtube.com/iframe_api"></script>
-<!-- API de Vimeo -->
-<script src="https://player.vimeo.com/api/player.js"></script>
-
 {% endblock %}

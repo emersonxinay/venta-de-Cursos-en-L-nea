@@ -1124,3 +1124,21 @@ Traceback (most recent call last):
   File "/Users/emerson/Desktop/Todo_Mac/proyectos_python/venta_cursos_pagos/venv/lib/python3.9/site-packages/gunicorn/workers/workertmp.py", line 22, in __init__
     raise RuntimeError("%s doesn't exist. Can't create workertmp." % fdir)
 RuntimeError: /dev/shm doesn't exist. Can't create workertmp.
+[2025-08-03 19:23:41 -0400] [60209] [INFO] Starting gunicorn 23.0.0
+[2025-08-03 19:23:41 -0400] [60209] [INFO] Listening at: http://127.0.0.1:8000 (60209)
+[2025-08-03 19:23:41 -0400] [60209] [INFO] Using worker: sync
+[2025-08-03 19:23:41 -0400] [60209] [ERROR] Unhandled exception in main loop
+Traceback (most recent call last):
+  File "/Users/emerson/Desktop/Todo_Mac/proyectos_python/venta_cursos_pagos/venv/lib/python3.9/site-packages/gunicorn/arbiter.py", line 201, in run
+    self.manage_workers()
+  File "/Users/emerson/Desktop/Todo_Mac/proyectos_python/venta_cursos_pagos/venv/lib/python3.9/site-packages/gunicorn/arbiter.py", line 570, in manage_workers
+    self.spawn_workers()
+  File "/Users/emerson/Desktop/Todo_Mac/proyectos_python/venta_cursos_pagos/venv/lib/python3.9/site-packages/gunicorn/arbiter.py", line 641, in spawn_workers
+    self.spawn_worker()
+  File "/Users/emerson/Desktop/Todo_Mac/proyectos_python/venta_cursos_pagos/venv/lib/python3.9/site-packages/gunicorn/arbiter.py", line 588, in spawn_worker
+    worker = self.worker_class(self.worker_age, self.pid, self.LISTENERS,
+  File "/Users/emerson/Desktop/Todo_Mac/proyectos_python/venta_cursos_pagos/venv/lib/python3.9/site-packages/gunicorn/workers/base.py", line 65, in __init__
+    self.tmp = WorkerTmp(cfg)
+  File "/Users/emerson/Desktop/Todo_Mac/proyectos_python/venta_cursos_pagos/venv/lib/python3.9/site-packages/gunicorn/workers/workertmp.py", line 22, in __init__
+    raise RuntimeError("%s doesn't exist. Can't create workertmp." % fdir)
+RuntimeError: /dev/shm doesn't exist. Can't create workertmp.
