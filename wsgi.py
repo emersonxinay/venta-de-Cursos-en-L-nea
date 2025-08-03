@@ -1,30 +1,27 @@
-#!/usr/bin/env python3
-"""
-WSGI entry point for production deployment
-"""
-
 import os
-import sys
 from dotenv import load_dotenv
 
-# Add the project directory to Python path
+# Cargar variables de entorno
 project_home = os.path.dirname(os.path.abspath(__file__))
-if project_home not in sys.path:
-    sys.path.insert(0, project_home)
-
-# Load environment variables
 load_dotenv(os.path.join(project_home, '.env'))
 
-# Import the Flask application
-from app import app
+# Importar la app y funciones de inicialización
+from app import app, init_app, db
 
-# Configure for production
+# Crear tablas si no existen
+with app.app_context():
+    db.create_all()
+
+# Inicializar la app siempre (Gunicorn la necesita)
+init_app()
+
+# Configuración de logs para producción
 if __name__ != "__main__":
-    # Set up logging for production
     import logging
     from logging.handlers import RotatingFileHandler
     
     if not app.debug:
+        os.makedirs("logs", exist_ok=True)
         file_handler = RotatingFileHandler(
             'logs/app.log', 
             maxBytes=10240000, 
@@ -39,4 +36,6 @@ if __name__ != "__main__":
         app.logger.info('CompilandoCode startup')
 
 if __name__ == "__main__":
-    app.run(host='0.0.0.0', port=8000)
+    port = int(os.getenv("PORT", 8000))
+    app.run(host='0.0.0.0', port=port)
+

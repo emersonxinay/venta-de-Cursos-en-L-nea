@@ -710,12 +710,11 @@ def health_check():
         }
         return jsonify(error_info), 500
 
-
-with app.app_context():
-    db.create_all()
+init_app()
 
 if __name__ == "__main__":
-    init_app()
+    with app.app_context():
+        db.create_all()  # Solo en desarrollo 
     # Toma PORT del .env o usa 5004 por defecto
     port = int(os.getenv("PORT", 5004))
     app.run(debug=True, host="0.0.0.0", port=port)
