@@ -6,14 +6,16 @@ project_home = os.path.dirname(os.path.abspath(__file__))
 load_dotenv(os.path.join(project_home, '.env'))
 
 # Importar la app y funciones de inicialización
-from app import app, init_app, db
+from app import app, init_app
 
-# Crear tablas si no existen
-with app.app_context():
-    db.create_all()
-
-# Inicializar la app siempre (Gunicorn la necesita)
+# Inicializar la app para producción
 init_app()
+
+# Solo crear tablas en modo desarrollo o cuando se ejecute directamente
+if __name__ == "__main__" or os.getenv('FLASK_ENV') == 'development':
+    from extensions import db
+    with app.app_context():
+        db.create_all()
 
 # Configuración de logs para producción
 if __name__ != "__main__":
@@ -36,6 +38,6 @@ if __name__ != "__main__":
         app.logger.info('CompilandoCode startup')
 
 if __name__ == "__main__":
-    port = int(os.getenv("PORT", 8000))
-    app.run(host='0.0.0.0', port=port)
+    port = int(os.getenv("PORT", 5004))
+    app.run(host='0.0.0.0', port=port, debug=False)
 

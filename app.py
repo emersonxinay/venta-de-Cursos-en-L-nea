@@ -1,7 +1,7 @@
 from datetime import datetime
 from flask_migrate import Migrate
 from flask import Flask, current_app, jsonify, render_template, redirect, url_for, request, flash
-from flask_sqlalchemy import SQLAlchemy
+# from flask_sqlalchemy import SQLAlchemy - movido a extensions.py
 from sqlalchemy.exc import SQLAlchemyError
 from flask_login import LoginManager, UserMixin, login_user, login_required, current_user, logout_user
 from sqlalchemy import func
@@ -9,7 +9,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime, timedelta
 from werkzeug.utils import secure_filename
 from flask_wtf.csrf import CSRFProtect
-from extensions import db
+# from extensions import db - removido para evitar duplicación
 import stripe
 import paypalrestsdk
 from dotenv import load_dotenv
@@ -63,7 +63,9 @@ if os.getenv('FLASK_ENV') == 'production':
 csrf = CSRFProtect(app)
 
 
-db = SQLAlchemy(app)
+# Inicializar db desde extensions
+from extensions import db
+db.init_app(app)
 
 login_manager = LoginManager(app)
 login_manager.login_view = 'login'
@@ -118,46 +120,8 @@ UPLOAD_FOLDER = 'static/uploads'
 ALLOWED_EXTENSIONS = {'mp4'}
 
 
-class Usuario(db.Model, UserMixin):
-    id = db.Column(db.Integer, primary_key=True)
-    nombre = db.Column(db.String(100), nullable=False)
-    correo = db.Column(db.String(100), unique=True, nullable=False)
-    contrasena = db.Column(db.String(250), nullable=False)
-    rol = db.Column(db.String(20), nullable=False)  # admin, usuario
-    compras = db.relationship('Venta', backref='usuario', lazy=True)
-
-
-class Curso(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    nombre = db.Column(db.String(100), nullable=False)
-    descripcion = db.Column(db.String(500))
-    precio = db.Column(db.Float, nullable=False)
-    ventas = db.relationship('Venta', backref='curso',
-                             lazy=True, cascade="all, delete-orphan")
-    secciones = db.relationship(
-        'Seccion', backref='curso', lazy=True, cascade="all, delete-orphan")
-
-
-class Seccion(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    titulo = db.Column(db.String(100), nullable=False)
-    descripcion = db.Column(db.String(500))
-    video_url = db.Column(db.String(200))
-    video_file = db.Column(db.String(200))
-    curso_id = db.Column(db.Integer, db.ForeignKey('curso.id'), nullable=False)
-    es_gratis = db.Column(db.Boolean, default=False)
-
-
-class Venta(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    usuario_id = db.Column(db.Integer, db.ForeignKey(
-        'usuario.id'), nullable=False)
-    curso_id = db.Column(db.Integer, db.ForeignKey('curso.id'), nullable=False)
-    metodo_pago = db.Column(db.String(50), nullable=False)
-    fecha_venta = db.Column(db.DateTime, default=datetime.utcnow)
-    estado_transferencia = db.Column(
-        db.String(20), nullable=True, default='pendiente')
-    fecha_expiracion = db.Column(db.DateTime, nullable=False)
+# Modelos movidos a models.py para evitar duplicación
+from models import Usuario, Curso, Seccion, Venta
 
 
 globals()['flask_app'] = app
@@ -172,8 +136,11 @@ def load_user(user_id):
 
 # rutas modularizadas
 def init_app():
-    from routes import init_routes
-    init_routes(app)
+    # Solo inicializar rutas si no han sido inicializadas
+    if not hasattr(app, '_routes_initialized'):
+        from routes import init_routes
+        init_routes(app)
+        app._routes_initialized = True
 
 # fin de rutas modularizadas
 
@@ -442,7 +409,7 @@ def comprar_curso(curso_id):
             return redirect(url_for('dashboard'))
 
         flash('Error en el pago.')
-    return render_template('comprar_curso.html', curso=curso, stripe_publishable_key=stripe_publishable_key)
+    return render_template('comprar_curso.html', curso=curso, stripe_publishable_key=app.config.get('STRIPE_PUBLISHABLE_KEY'))
 
 
 @app.route('/confirmar_pago/<int:curso_id>', methods=['POST'])

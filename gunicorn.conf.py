@@ -17,8 +17,8 @@ max_requests_jitter = 50
 
 # Logging
 loglevel = "info"
-accesslog = "/var/log/gunicorn/access.log"
-errorlog = "/var/log/gunicorn/error.log"
+accesslog = "logs/access.log"
+errorlog = "logs/error.log"
 
 # Process naming
 proc_name = "compilandocode"
