@@ -24,30 +24,35 @@ load_dotenv()
 app = Flask(__name__)
 
 # Configuración robusta de base de datos
+
+
 def get_database_url():
     """Construir URL de base de datos desde variables de entorno"""
     # Para producción con variables de entorno
     if os.getenv('DATABASE_URL'):
         return os.getenv('DATABASE_URL')
-    
+
     # Para configuración manual
     db_host = os.getenv('DB_HOST', 'localhost')
     db_port = os.getenv('DB_PORT', '5432')
     db_name = os.getenv('DB_NAME', 'db_venta_cursos')
     db_user = os.getenv('DB_USER', 'postgres')
     db_password = os.getenv('DB_PASSWORD')
-    
+
     if not db_password:
-        raise ValueError("DB_PASSWORD es requerido. Configura las variables de entorno.")
-    
+        raise ValueError(
+            "DB_PASSWORD es requerido. Configura las variables de entorno.")
+
     return f"postgresql://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}"
+
 
 # Configuración de aplicación
 app.config['SQLALCHEMY_DATABASE_URI'] = get_database_url()
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', os.urandom(32))
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['UPLOAD_FOLDER'] = os.getenv('UPLOAD_FOLDER', 'static/uploads')
-app.config['MAX_CONTENT_PATH'] = int(os.getenv('MAX_CONTENT_PATH', 16 * 1024 * 1024))
+app.config['MAX_CONTENT_PATH'] = int(
+    os.getenv('MAX_CONTENT_PATH', 16 * 1024 * 1024))
 
 # Configuración de seguridad para producción
 if os.getenv('FLASK_ENV') == 'production':
@@ -67,10 +72,12 @@ login_manager.login_view = 'login'
 migrate = Migrate(app, db)
 
 # Configuración de servicios de pago
+
+
 def configure_payment_services():
     """Configurar Stripe y PayPal según el entorno"""
     app_mode = os.getenv('FLASK_ENV', 'development')
-    
+
     if app_mode == 'production':
         # Configuración de producción
         stripe_key = os.getenv('STRIPE_API_KEY_LIVE')
@@ -85,14 +92,14 @@ def configure_payment_services():
         paypal_client_id = os.getenv('PAYPAL_CLIENT_ID_SANDBOX')
         paypal_client_secret = os.getenv('PAYPAL_CLIENT_SECRET_SANDBOX')
         paypal_mode = "sandbox"
-    
+
     # Configurar Stripe
     if stripe_key:
         stripe.api_key = stripe_key
         app.config['STRIPE_PUBLISHABLE_KEY'] = stripe_pub_key
     else:
         app.logger.warning("Stripe no configurado - claves no encontradas")
-    
+
     # Configurar PayPal
     if paypal_client_id and paypal_client_secret:
         paypalrestsdk.configure({
@@ -102,6 +109,7 @@ def configure_payment_services():
         })
     else:
         app.logger.warning("PayPal no configurado - claves no encontradas")
+
 
 configure_payment_services()
 
@@ -682,7 +690,7 @@ def health_check():
     try:
         # Check database connection
         db.session.execute('SELECT 1')
-        
+
         # Basic application health info
         health_info = {
             'status': 'healthy',
@@ -691,7 +699,7 @@ def health_check():
             'database': 'connected',
             'environment': os.getenv('FLASK_ENV', 'development')
         }
-        
+
         return jsonify(health_info), 200
     except Exception as e:
         error_info = {
@@ -708,4 +716,6 @@ with app.app_context():
 
 if __name__ == "__main__":
     init_app()
-    app.run(debug=True)
+    # Toma PORT del .env o usa 5004 por defecto
+    port = int(os.getenv("PORT", 5004))
+    app.run(debug=True, host="0.0.0.0", port=port)
