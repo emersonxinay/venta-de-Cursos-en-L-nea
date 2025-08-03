@@ -88,10 +88,10 @@
         <input
           type="text"
           id="course-search-input"
-          class="search-input"
+          class="input-gradient"
           placeholder="Buscar por nombre, descripción o precio..."
         />
-        <span class="search-icon">🔍</span>
+        <span class="search-icon" style="font-size: 0.8em;">🔍</span>
       </div>
     </div>
 
@@ -117,7 +117,7 @@
             <td class="actions-cell">
               <a
                 href="{{ url_for('editar_curso', curso_id=curso.id) }}"
-                class="btn btn-edit"
+                class="btn-gradient"
                 >Editar</a
               >
               <form
@@ -129,7 +129,7 @@
                   name="csrf_token"
                   value="{{ csrf_token() }}"
                 />
-                <button type="submit" class="btn btn-delete">Eliminar</button>
+                <button type="submit" class="btn-ghost-gradient danger">Eliminar</button>
               </form>
             </td>
           </tr>
@@ -146,10 +146,10 @@
         <input
           type="text"
           id="user-search-input"
-          class="search-input"
+          class="input-gradient"
           placeholder="Buscar por nombre o correo..."
         />
-        <span class="search-icon">🔍</span>
+        <span class="search-icon" style="font-size: 0.8em;">🔍</span>
       </div>
     </div>
 
@@ -173,7 +173,7 @@
             <td class="actions-cell">
               <a
                 href="{{ url_for('editar_usuario', usuario_id=usuario.id) }}"
-                class="btn btn-edit"
+                class="btn-gradient"
                 >Editar</a
               >
               <form
@@ -185,7 +185,7 @@
                   name="csrf_token"
                   value="{{ csrf_token() }}"
                 />
-                <button type="submit" class="btn btn-delete">Eliminar</button>
+                <button type="submit" class="btn-ghost-gradient danger">Eliminar</button>
               </form>
             </td>
           </tr>
@@ -216,14 +216,14 @@
             action="{{ url_for('confirmar_transferencia', venta_id=transferencia.id) }}"
           >
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
-            <button type="submit" class="btn btn-success">Aprobar</button>
+            <button type="submit" class="btn-gradient success">Aprobar</button>
           </form>
           <form
             method="POST"
             action="{{ url_for('rechazar_transferencia', venta_id=transferencia.id) }}"
           >
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
-            <button type="submit" class="btn btn-danger">Rechazar</button>
+            <button type="submit" class="btn-ghost-gradient danger">Rechazar</button>
           </form>
         </div>
       </div>
@@ -238,10 +238,10 @@
         <input
           type="text"
           id="access-search-input"
-          class="search-input"
+          class="input-gradient"
           placeholder="Buscar por usuario, curso, estado o fecha..."
         />
-        <span class="search-icon">🔍</span>
+        <span class="search-icon" style="font-size: 0.8em;">🔍</span>
       </div>
     </div>
 
@@ -285,7 +285,7 @@
                   name="csrf_token"
                   value="{{ csrf_token() }}"
                 />
-                <button type="submit" class="btn btn-warning">
+                <button type="submit" class="btn-ghost-gradient warning">
                   Quitar Acceso
                 </button>
               </form>
@@ -299,7 +299,7 @@
                   name="csrf_token"
                   value="{{ csrf_token() }}"
                 />
-                <button type="submit" class="btn btn-success">
+                <button type="submit" class="btn-gradient success">
                   Activar Acceso
                 </button>
               </form>

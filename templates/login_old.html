@@ -1,0 +1,163 @@
+{% extends "base.html" %} {% block title %}Login{% endblock %} {% block content
+%}
+<div class="login-container">
+  <div class="login-card">
+    <header class="login-header">
+      <h1 class="login-title">Bienvenido de nuevo</h1>
+      <p class="login-subtitle">Ingresa tus credenciales para continuar</p>
+    </header>
+
+    <form method="POST" action="{{ url_for('login') }}" class="login-form">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+
+      <div class="form-group">
+        <label for="login-email" class="form-label">Correo electrónico</label>
+        <input
+          type="email"
+          name="correo"
+          id="login-email"
+          required
+          class="input-gradient"
+          placeholder="tu@email.com"
+        />
+        <div class="input-focus-border"></div>
+      </div>
+
+      <div class="form-group">
+        <label for="login-password" class="form-label">Contraseña</label>
+        <div class="password-wrapper">
+          <input
+            type="password"
+            name="contrasena"
+            id="login-password"
+            required
+            class="input-gradient"
+            placeholder="••••••••"
+          />
+          <button
+            type="button"
+            class="password-toggle"
+            aria-label="Mostrar contraseña"
+          >
+            <svg class="password-icon" viewBox="0 0 24 24" fill="none">
+              <path
+                d="M12 5C5.63636 5 2 12 2 12C2 12 5.63636 19 12 19C18.3636 19 22 12 22 12C22 12 18.3636 5 12 5Z"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+              <path
+                d="M12 15C13.6569 15 15 13.6569 15 12C15 10.3431 13.6569 9 12 9C10.3431 9 9 10.3431 9 12C9 13.6569 10.3431 15 12 15Z"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+          </button>
+          <div class="input-focus-border"></div>
+        </div>
+      </div>
+
+      <div class="form-actions">
+        <button type="submit" class="btn-gradient">
+          <span class="button-text">Iniciar sesión</span>
+          <span class="button-loader">
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M12 2V6"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+              />
+              <path
+                d="M12 18V22"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+              />
+              <path
+                d="M4.93 4.93L7.76 7.76"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+              />
+              <path
+                d="M16.24 16.24L19.07 19.07"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+              />
+              <path
+                d="M2 12H6"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+              />
+              <path
+                d="M18 12H22"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+              />
+              <path
+                d="M4.93 19.07L7.76 16.24"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+              />
+              <path
+                d="M16.24 7.76L19.07 4.93"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+              />
+            </svg>
+          </span>
+        </button>
+      </div>
+    </form>
+
+    <footer class="login-footer">
+      <p class="footer-text">
+        ¿No tienes una cuenta?
+        <a href="{{ url_for('register') }}" class="footer-link"
+          >Regístrate aquí</a
+        >
+      </p>
+    </footer>
+  </div>
+</div>
+
+<script>
+  // Simple JavaScript para el toggle de contraseña (opcional)
+  document.addEventListener('DOMContentLoaded', function() {
+    const passwordToggle = document.querySelector('.password-toggle');
+    const passwordInput = document.querySelector('#login-password');
+
+    if (passwordToggle && passwordInput) {
+      passwordToggle.addEventListener('click', function() {
+        const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+        passwordInput.setAttribute('type', type);
+        passwordToggle.setAttribute('aria-label', type === 'password' ? 'Mostrar contraseña' : 'Ocultar contraseña');
+      });
+    }
+
+    // Simulación de carga (opcional)
+    const loginButton = document.querySelector('.login-button');
+    if (loginButton) {
+      loginButton.addEventListener('click', function() {
+        this.classList.add('loading');
+        setTimeout(() => {
+          this.classList.remove('loading');
+        }, 2000);
+      });
+    }
+  });
+</script>
+{% endblock %}

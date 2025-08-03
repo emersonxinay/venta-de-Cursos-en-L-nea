@@ -5,21 +5,22 @@ content %}
 <form method="POST">
   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
   <label for="titulo">Título:</label>
-  <input type="text" name="titulo" value="{{ seccion.titulo }}" required />
+  <input type="text" name="titulo" value="{{ seccion.titulo }}" class="input-gradient" required />
   <br />
   <label for="descripcion">Descripción:</label>
-  <textarea name="descripcion" required>{{ seccion.descripcion }}</textarea>
+  <textarea name="descripcion" class="input-gradient" required>{{ seccion.descripcion }}</textarea>
   <br />
   <label for="video_url">URL del Video:</label>
   <input
     type="text"
     name="video_url"
     value="{{ seccion.video_url }}"
+    class="input-gradient"
     required
   />
   <br />
   <label for="video_file">Archivo de Video:</label>
-  <input type="file" id="video_file" name="video_file" accept="video/mp4" />
+  <input type="file" id="video_file" name="video_file" accept="video/mp4" class="input-gradient" />
   <br />
   <label for="es_gratis">¿Es Gratis?</label>
   <input
@@ -33,6 +34,6 @@ content %}
     %}
   />
   <br />
-  <button type="submit">Actualizar Sección</button>
+  <button type="submit" class="btn-gradient">Actualizar Sección</button>
 </form>
 {% endblock %}

@@ -4,14 +4,14 @@ content %}
 <form method="POST" action="{{ url_for('nuevo_curso') }}">
   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
   <label for="nombre">Nombre:</label>
-  <input type="text" name="nombre" required />
+  <input type="text" name="nombre" class="input-gradient" required />
   <br />
   <label for="descripcion">Descripción:</label>
-  <textarea name="descripcion" required></textarea>
+  <textarea name="descripcion" class="input-gradient" required></textarea>
   <br />
   <label for="precio">Precio:</label>
-  <input type="number" step="0.01" name="precio" required />
+  <input type="number" step="0.01" name="precio" class="input-gradient" required />
   <br />
-  <button type="submit">Crear Curso</button>
+  <button type="submit" class="btn-gradient">Crear Curso</button>
 </form>
 {% endblock %}

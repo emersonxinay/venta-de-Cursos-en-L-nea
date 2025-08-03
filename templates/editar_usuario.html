@@ -8,11 +8,11 @@ content %}
 >
   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
   <label for="nombre">Nombre:</label>
-  <input type="text" name="nombre" value="{{ usuario.nombre }}" required />
+  <input type="text" name="nombre" value="{{ usuario.nombre }}" class="input-gradient" required />
   <br />
   <label for="correo">Correo:</label>
-  <input type="email" name="correo" value="{{ usuario.correo }}" required />
+  <input type="email" name="correo" value="{{ usuario.correo }}" class="input-gradient" required />
   <br />
-  <button type="submit">Actualizar</button>
+  <button type="submit" class="btn-gradient">Actualizar</button>
 </form>
 {% endblock %}

@@ -4,14 +4,14 @@ content %}
 <form method="POST" action="{{ url_for('register') }}">
   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
   <label for="nombre">Nombre:</label>
-  <input type="text" name="nombre" required />
+  <input type="text" name="nombre" class="input-gradient" required />
   <br />
   <label for="correo">Correo:</label>
-  <input type="email" name="correo" required />
+  <input type="email" name="correo" class="input-gradient" required />
   <br />
   <label for="contrasena">Contraseña:</label>
-  <input type="password" name="contrasena" required />
+  <input type="password" name="contrasena" class="input-gradient" required />
   <br />
-  <button type="submit">Registrarse</button>
+  <button type="submit" class="btn-gradient">Registrarse</button>
 </form>
 {% endblock %}

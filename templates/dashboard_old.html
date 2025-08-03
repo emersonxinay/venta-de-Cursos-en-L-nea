@@ -1,0 +1,226 @@
+{% extends "base.html" %} {% block title %}Dashboard{% endblock %} {% block
+content %}
+<div id="db-main-container" class="db-container">
+  <header class="db-header">
+    <h1 id="db-main-title" class="db-title">Tú portal de cursos</h1>
+
+    <!-- Búsqueda global -->
+    <div id="db-global-search" class="db-search-container">
+      <input
+        type="text"
+        id="db-search-input"
+        class="db-search-input input-gradient"
+        placeholder="Buscar en todos los cursos..."
+        aria-label="Buscar cursos"
+      />
+      <span class="db-search-icon">
+        <i class="fas fa-search"></i>
+      </span>
+    </div>
+  </header>
+
+  {% if current_user.is_authenticated and current_user.rol == 'admin' %}
+  <section id="db-admin-section" class="db-section">
+    <div class="db-section-header">
+      <h2 class="db-section-title">Administración de Cursos</h2>
+      <a
+        href="{{ url_for('nuevo_curso') }}"
+        class="db-btn db-btn-primary db-btn-icon btn-gradient"
+      >
+        <i class="fas fa-plus"></i> Crear Nuevo Curso
+      </a>
+    </div>
+
+    <div class="db-table-wrapper">
+      <table id="db-admin-table" class="db-data-table">
+        <thead>
+          <tr class="db-table-header-row">
+            <th class="db-table-head db-col-name">Nombre</th>
+            <th class="db-table-head db-col-price">Precio</th>
+            <th class="db-table-head db-col-actions">Acciones</th>
+          </tr>
+        </thead>
+        <tbody class="db-table-body">
+          {% for curso in cursos %}
+          <tr
+            class="db-table-row"
+            data-search="{{ curso.nombre.lower() }} {{ curso.precio|string }}"
+          >
+            <td class="db-table-cell db-cell-name">{{ curso.nombre }}</td>
+            <td class="db-table-cell db-cell-price">{{ curso.precio }} USD</td>
+            <td class="db-table-cell db-cell-actions">
+              <div class="db-action-btns">
+                <a
+                  href="{{ url_for('editar_curso', curso_id=curso.id) }}"
+                  class="db-btn db-btn-edit db-btn-sm btn-gradient"
+                >
+                  <i class="fas fa-edit"></i> Editar
+                </a>
+                <a
+                  href="{{ url_for('eliminar_curso', curso_id=curso.id) }}"
+                  class="db-btn db-btn-delete db-btn-sm btn-ghost-gradient danger"
+                >
+                  <i class="fas fa-trash-alt"></i> Eliminar
+                </a>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+  {% endif %} {% if current_user.is_authenticated %}
+  <section id="db-my-courses" class="db-section">
+    <h2 class="db-section-title">Mis Cursos Comprados</h2>
+    <div id="db-purchased-courses" class="db-cards-grid">
+      {% for venta in mis_ventas %} {% if venta.estado_transferencia ==
+      'confirmada' and venta.fecha_expiracion > current_time %}
+      <div
+        class="db-course-card"
+        data-search="{{ venta.curso.nombre.lower() }} {{ venta.metodo_pago.lower() }} {{ venta.fecha_venta.strftime('%d-%m-%Y') }}"
+      >
+        <div class="db-card-header">
+          <h3 class="db-card-title">{{ venta.curso.nombre }}</h3>
+          <span class="db-card-meta db-payment-method"
+            >{{ venta.metodo_pago }}</span
+          >
+        </div>
+        <div class="db-card-body">
+          <div class="db-card-dates">
+            <div class="db-date-item">
+              <span class="db-date-label">Compra:</span>
+              <span class="db-date-value"
+                >{{ venta.fecha_venta.strftime('%d-%m-%Y') }}</span
+              >
+            </div>
+            <div class="db-date-item">
+              <span class="db-date-label">Expira:</span>
+              <span class="db-date-value"
+                >{{ venta.fecha_expiracion.strftime('%d-%m-%Y') }}</span
+              >
+            </div>
+          </div>
+        </div>
+        <div class="db-card-footer">
+          <a
+            href="{{ url_for('ver_curso', curso_id=venta.curso.id) }}"
+            class="db-btn db-btn-view db-btn-block btn-gradient"
+          >
+            <i class="fas fa-eye"></i> Ver Curso
+          </a>
+        </div>
+      </div>
+      {% endif %} {% endfor %}
+    </div>
+  </section>
+
+  <section id="db-pending-section" class="db-section">
+    <h2 class="db-section-title">
+      Cursos Pendientes de pago por transferencia
+    </h2>
+    <div id="db-pending-courses" class="db-cards-grid">
+      {% for venta in mis_ventas %} {% if venta.estado_transferencia ==
+      'pendiente' %}
+      <div
+        class="db-course-card db-card-pending"
+        data-search="{{ venta.curso.nombre.lower() }} {{ venta.metodo_pago.lower() }} {{ venta.fecha_venta.strftime('%d-%m-%Y') }}"
+      >
+        <div class="db-card-header">
+          <h3 class="db-card-title">{{ venta.curso.nombre }}</h3>
+          <span class="db-card-meta db-payment-method"
+            >{{ venta.metodo_pago }}</span
+          >
+        </div>
+        <div class="db-card-body">
+          <div class="db-card-dates">
+            <div class="db-date-item">
+              <span class="db-date-label">Fecha:</span>
+              <span class="db-date-value"
+                >{{ venta.fecha_venta.strftime('%d-%m-%Y') }}</span
+              >
+            </div>
+          </div>
+        </div>
+        <div class="db-card-footer">
+          <span class="db-status-badge db-status-pending">
+            <i class="fas fa-clock"></i> Pendiente de Confirmación
+          </span>
+        </div>
+      </div>
+      {% endif %} {% endfor %}
+    </div>
+  </section>
+  {% endif %}
+
+  <section id="db-available-courses" class="db-section">
+    <h2 class="db-section-title">Cursos Disponibles</h2>
+    <div id="db-courses-grid" class="db-cards-grid">
+      {% for curso in cursos %}
+      <div
+        class="db-course-card"
+        data-search="{{ curso.nombre.lower() }} {{ curso.precio|string }}"
+      >
+        <div class="db-card-header">
+          <h3 class="db-card-title">{{ curso.nombre }}</h3>
+          <span class="db-card-price">{{ curso.precio }} USD</span>
+        </div>
+        <div class="db-card-body">
+          <p class="db-card-description">
+            {{ curso.descripcion|truncate(100) }}
+          </p>
+        </div>
+        <div class="db-card-footer">
+          <a
+            href="{{ url_for('ver_curso', curso_id=curso.id) }}"
+            class="db-btn db-btn-view db-btn-sm btn-gradient"
+          >
+            <i class="fas fa-info-circle"></i> Detalles
+          </a>
+          {% if current_user.is_authenticated %} {% if curso.id in
+          cursos_comprados_ids %}
+          <span class="db-status-badge db-status-confirmed">
+            <i class="fas fa-check"></i> Ya comprado
+          </span>
+          {% elif curso.id in cursos_pendientes_ids %}
+          <span class="db-status-badge db-status-pending">
+            <i class="fas fa-clock"></i> Pendiente
+          </span>
+          {% else %}
+          <a
+            href="{{ url_for('comprar_curso', curso_id=curso.id) }}"
+            class="db-btn db-btn-primary db-btn-sm btn-gradient"
+          >
+            <i class="fas fa-shopping-cart"></i> Comprar
+          </a>
+          {% endif %} {% else %}
+          <a href="{{url_for('login')}}" class="db-btn db-btn-login db-btn-sm btn-ghost-gradient">
+            <i class="fas fa-sign-in-alt"></i> Iniciar sesión
+          </a>
+          {% endif %}
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </section>
+</div>
+
+<script>
+  // Función para normalizar texto (eliminar acentos)
+  const normalizeText = (text) => {
+    return text.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+  };
+
+  // Búsqueda global
+  document.getElementById('db-search-input').addEventListener('input', function() {
+    const searchTerm = normalizeText(this.value);
+    const allElements = document.querySelectorAll('#db-admin-table .db-table-row, .db-course-card');
+
+    allElements.forEach(element => {
+      const searchText = normalizeText(element.getAttribute('data-search') || '');
+      element.style.display = searchTerm === '' || searchText.includes(searchTerm) ? '' : 'none';
+    });
+  });
+</script>
+
+{% endblock %}

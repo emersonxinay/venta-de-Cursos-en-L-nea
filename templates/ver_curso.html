@@ -1,245 +1,357 @@
-{% extends "base.html" %} {% block title %}{{ curso.nombre }} | Plataforma de
-Cursos{% endblock %} {% block content %}
-<div id="curso-detalle-container" class="curso-detalle">
-  <!-- Header del curso -->
-  <div class="curso-header">
-    <div class="curso-info">
-      <h1 id="curso-titulo" class="curso-titulo">{{ curso.nombre }}</h1>
-      <p id="curso-descripcion" class="curso-descripcion">
-        {{ curso.descripcion }}
+{% extends "base.html" %}
+{% block title %}{{ curso.nombre }} - CompilandoCode{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-6">
+  <!-- Course Header with Modern Gradient -->
+  <div class="mb-8 animate-fadeIn">
+    <div class="gradient-card" style="background: var(--gradient-primary)">
+      <div class="card-body" style="padding: 2.5rem;">
+        <div class="flex flex-col lg:flex-row gap-8 items-start">
+          
+          <!-- Course Information -->
+          <div class="flex-1">
+            <h1 class="text-4xl font-bold text-white mb-4">
+              {{ curso.nombre }}
+            </h1>
+            <p class="text-white/90 text-lg mb-6 leading-relaxed">
+              {{ curso.descripcion }}
+            </p>
+
+            <!-- Course Metadata -->
+            <div class="flex flex-wrap items-center gap-4 mb-6">
+              {% if curso.categoria %}
+              <div class="badge-gradient primary">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path>
+                </svg>
+                {{ curso.categoria }}
+              </div>
+              {% endif %}
+              
+              <div class="badge-gradient secondary">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"></path>
+                </svg>
+                4.5/5 Rating
+              </div>
+              
+              <div class="badge-gradient success">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"></path>
+                </svg>
+                {{ secciones|length }} Lecciones
+              </div>
+            </div>
+
+            <!-- Admin Actions -->
+            {% if current_user.is_authenticated and current_user.rol == 'admin' %}
+            <div class="flex flex-wrap gap-3">
+              <a href="{{ url_for('nueva_seccion', curso_id=curso.id) }}" class="btn-gradient">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                </svg>
+                Agregar Sección
+              </a>
+              <a href="{{ url_for('editar_curso', curso_id=curso.id) }}" class="btn-ghost-gradient">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                </svg>
+                Editar Curso
+              </a>
+            </div>
+            {% endif %}
+          </div>
+
+          <!-- Purchase/Access Card -->
+          <div class="w-full lg:w-80">
+            {% if not (current_user.is_authenticated and venta) %}
+            <div class="card glass-effect">
+              <div class="card-body text-center">
+                <div class="mb-6">
+                  {% if curso.precio_original %}
+                  <div class="text-lg line-through text-white/60 mb-1">
+                    ${{ "%.2f"|format(curso.precio_original) }}
+                  </div>
+                  {% endif %}
+                  <div class="text-3xl font-bold text-white mb-2">
+                    ${{ "%.2f"|format(curso.precio) }}
+                  </div>
+                  <div class="text-sm text-white/80">Precio único</div>
+                </div>
+                
+                <a href="{{ url_for('comprar_curso', curso_id=curso.id) }}" class="btn-gradient w-full mb-4">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4m.6 8L4 6H2m3 7v6a1 1 0 001 1h10a1 1 0 001-1v-6m0 0V9a2 2 0 012-2V7a2 2 0 00-2-2H9a2 2 0 00-2 2v2a2 2 0 012 2v4.01"></path>
+                  </svg>
+                  Comprar Curso
+                </a>
+                
+                <div class="flex items-center justify-center gap-2 text-sm text-white/80">
+                  <svg class="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+                  </svg>
+                  Garantía de 30 días
+                </div>
+              </div>
+            </div>
+            {% else %}
+            <!-- Access Available Panel -->
+            <div class="card glass-effect">
+              <div class="card-body text-center">
+                <div class="w-16 h-16 mx-auto mb-4 bg-green-500/20 rounded-full flex items-center justify-center">
+                  <svg class="w-8 h-8 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                  </svg>
+                </div>
+                <h3 class="text-xl font-bold mb-2 text-white">
+                  ¡Tienes acceso completo!
+                </h3>
+                <p class="text-white/80 mb-4">
+                  Disfruta de todo el contenido del curso
+                </p>
+                {% if progreso_curso is defined %}
+                <div class="mb-4">
+                  <div class="flex justify-between text-sm mb-2 text-white/80">
+                    <span>Progreso del curso</span>
+                    <span class="text-white font-bold">{{ progreso_curso }}%</span>
+                  </div>
+                  <div class="progress-bar">
+                    <div class="progress-fill" style="width: {{ progreso_curso }}%; background: var(--gradient-emerald-teal);"></div>
+                  </div>
+                </div>
+                {% endif %}
+                
+                {% if progreso_curso == 100 %}
+                <button id="btn-ver-certificado" class="btn-gradient success">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"></path>
+                  </svg>
+                  Ver Certificado
+                </button>
+                {% endif %}
+              </div>
+            </div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Course Content -->
+  <div class="animate-fadeInUp delay-200">
+    <div class="mb-8">
+      <h2 class="text-3xl font-bold mb-2" style="color: var(--text-primary)">
+        Contenido del Curso
+      </h2>
+      <p style="color: var(--text-secondary)" class="text-lg">
+        {{ secciones|length }} {{ 'lección' if secciones|length == 1 else 'lecciones' }} de contenido premium
       </p>
-
-      <div class="curso-meta-data">
-        <span class="curso-categoria">{{ curso.categoria }}</span>
-        <span class="curso-rating">★★★★☆ (4.5/5)</span>
-      </div>
-
-      {% if current_user.is_authenticated and current_user.rol == 'admin' %}
-      <div class="curso-admin-actions">
-        <a
-          href="{{ url_for('nueva_seccion', curso_id=curso.id) }}"
-          class="btn btn-add-section"
-        >
-          <i class="fas fa-plus"></i> Agregar Sección
-        </a>
-      </div>
-      {% endif %}
     </div>
 
-    {% if not (current_user.is_authenticated and venta) %}
-    <div id="curso-compra-card" class="curso-compra-card">
-      <div class="curso-precio-container">
-        <span class="curso-precio-actual"
-          >${{ "%.2f"|format(curso.precio) }}</span
-        >
-        {% if curso.precio_original %}
-        <span class="curso-precio-original"
-          >${{ "%.2f"|format(curso.precio_original) }}</span
-        >
-        {% endif %}
-      </div>
-      <a
-        href="{{ url_for('comprar_curso', curso_id=curso.id) }}"
-        class="btn btn-comprar-curso"
-      >
-        Comprar Curso
-      </a>
-      <div class="curso-garantia">
-        <i class="fas fa-shield-alt"></i> Garantía de 30 días
+    <!-- Certificate Modal (if has access and completed) -->
+    {% if venta and progreso_curso == 100 %}
+    <div id="modal-certificado" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 hidden flex items-center justify-center">
+      <div class="card glass-effect max-w-lg w-full m-4">
+        <div class="card-body text-center">
+          <button id="cerrar-modal" class="absolute top-4 right-4 text-white/60 hover:text-white">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+          </button>
+          
+          <div class="w-20 h-20 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-full flex items-center justify-center mx-auto mb-6">
+            <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"></path>
+            </svg>
+          </div>
+          
+          <h3 class="text-2xl font-bold text-white mb-2">Certificado de Finalización</h3>
+          <p class="text-white/80 mb-4">
+            Felicitaciones {{ current_user.nombre }} por completar el curso:
+          </p>
+          <h4 class="text-xl font-semibold text-white mb-6">{{ curso.nombre }}</h4>
+          
+          <div class="bg-white/10 rounded-lg p-4 mb-6">
+            <div class="text-sm text-white/70 space-y-1">
+              <p>Fecha: {{ fecha_actual.strftime('%d/%m/%Y') }}</p>
+              <p>Código: CERT-{{ curso.id }}-{{ current_user.id }}</p>
+            </div>
+          </div>
+          
+          <div class="text-center mb-6">
+            <div class="border-b border-white/30 w-48 mx-auto mb-2"></div>
+            <p class="text-sm text-white/60">CompilandoCode - Plataforma de Cursos</p>
+          </div>
+          
+          <button id="btn-descargar-certificado" class="btn-gradient warning">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+            </svg>
+            Descargar Certificado
+          </button>
+        </div>
       </div>
     </div>
     {% endif %}
-  </div>
 
-  <!-- Contenido del curso -->
-  <div class="curso-contenido-wrapper">
-    <div class="curso-contenido-header">
-      <h2 class="curso-contenido-titulo">Contenido del Curso</h2>
-      <div class="curso-progreso-container">
-        {% if venta %}
-        <div class="curso-progreso-bar">
-          <div
-            class="curso-progreso-fill"
-            style="width: {{ progreso_curso }}%"
-          ></div>
-        </div>
-        <span class="curso-progreso-texto"
-          >{{ progreso_curso }}% completado</span
-        >
-
-        {% if progreso_curso == 100 %}
-        <div class="curso-certificado-container">
-          <button id="btn-ver-certificado" class="btn-certificado">
-            <i class="fas fa-award"></i> Ver Certificado
-          </button>
-          <div id="modal-certificado" class="modal-certificado">
-            <div class="modal-contenido">
-              <span class="cerrar-modal">&times;</span>
-              <h3>Certificado de Finalización</h3>
-              <p>
-                Felicitaciones {{ current_user.nombre }} por completar el curso:
-              </p>
-              <h4>{{ curso.nombre }}</h4>
-              <div class="certificado-datos">
-                <p>Fecha: {{ fecha_actual.strftime('%d/%m/%Y') }}</p>
-                <p>Código: CERT-{{ curso.id }}-{{ current_user.id }}</p>
-              </div>
-              <div class="certificado-firma">
-                <p>_________________________</p>
-                <p>Equipo de Plataforma de Cursos</p>
-              </div>
-              <button id="btn-descargar-certificado" class="btn-descargar">
-                <i class="fas fa-download"></i> Descargar Certificado
-              </button>
-            </div>
-          </div>
-        </div>
-        {% endif %} {% endif %}
-      </div>
-    </div>
-
-    <div id="curso-secciones-container" class="curso-secciones">
+    <!-- Course Sections -->
+    <div class="space-y-6">
       {% for seccion in secciones %}
-      <div
-        id="seccion-{{ seccion.id }}"
-        class="curso-seccion-card {% if seccion.es_gratis %}seccion-gratis{% endif %}"
-      >
-        <div class="seccion-header">
-          <h3 class="seccion-titulo">
-            <span class="seccion-numero">{{ loop.index }}.</span> {{
-            seccion.titulo }} {% if seccion.es_gratis %}<span
-              class="seccion-gratis-badge"
-              >GRATIS</span
-            >{% endif %}
-          </h3>
-          <span class="seccion-duracion"
-            ><i class="far fa-clock"></i> {{ seccion.duracion }} min</span
-          >
-        </div>
-
-        <p class="seccion-descripcion">{{ seccion.descripcion }}</p>
-
-        <!-- Contenido de la sección -->
-        {% if seccion.es_gratis or (current_user.is_authenticated and venta) %}
-        <div class="seccion-contenido">
-          {% if seccion.video_url or seccion.video_file %}
-          <div class="seccion-video-container">
-            {% if seccion.video_url %} {# Extraer ID de video de YouTube #} {%
-            if 'youtube.com' in seccion.video_url or 'youtu.be' in
-            seccion.video_url %} {% set video_id =
-            seccion.video_url.split('v=')[1].split('&')[0] if 'v=' in
-            seccion.video_url else seccion.video_url.split('/')[-1] %}
-            <div class="youtube-player-container">
-              <lite-youtube
-                videoid="{{ video_id }}"
-                params="rel=0"
-                style="background-image: url('https://i.ytimg.com/vi/{{ video_id }}/hqdefault.jpg');"
-              >
-              </lite-youtube>
-            </div>
-            {% else %} {# Para otros proveedores de video #}
-            <iframe
-              src="{{ seccion.video_url }}"
-              frameborder="0"
-              allowfullscreen
-              id="video-{{ seccion.id }}"
-            ></iframe>
-            {% endif %} {% elif seccion.video_file %}
-            <video controls id="video-{{ seccion.id }}">
-              <source
-                src="{{ url_for('static', filename='uploads/videos/' + seccion.video_file) }}"
-                type="video/mp4"
-              />
-              Tu navegador no soporta el elemento de video.
-            </video>
-            {% endif %}
-
-            <!-- Barra de progreso del video -->
-            <div class="video-progreso-container">
-              <div class="video-progreso-bar">
-                <div
-                  class="video-progreso-fill"
-                  id="progreso-video-{{ seccion.id }}"
-                ></div>
+      <div id="seccion-{{ seccion.id }}" class="card hover-lift card-animated" style="animation-delay: {{ loop.index0 * 0.1 }}s">
+        <div class="card-body">
+          <!-- Section Header -->
+          <div class="flex items-start justify-between mb-4">
+            <div class="flex-1">
+              <div class="flex items-center gap-3 mb-2">
+                <div class="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold text-sm">
+                  {{ loop.index }}
+                </div>
+                <h3 class="text-xl font-semibold" style="color: var(--text-primary)">
+                  {{ seccion.titulo }}
+                </h3>
+                {% if seccion.es_gratis %}
+                <span class="badge-gradient success">GRATIS</span>
+                {% endif %}
               </div>
-              <span
-                class="video-progreso-texto"
-                id="texto-progreso-{{ seccion.id }}"
-                >0% visto</span
-              >
-              <input
-                type="checkbox"
-                id="completado-{{ seccion.id }}"
-                class="video-completado"
-                {%
-                if
-                seccion.id
-                in
-                secciones_completadas
-                %}checked{%
-                endif
-                %}
-              />
-              <label for="completado-{{ seccion.id }}" class="completado-label">
-                <i class="fas fa-check"></i> Completado
-              </label>
+              <p style="color: var(--text-secondary)" class="mb-3">{{ seccion.descripcion }}</p>
+            </div>
+            <div class="flex items-center gap-2 text-sm" style="color: var(--text-tertiary)">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+              {{ seccion.duracion }} min
             </div>
           </div>
-          {% endif %} {% if seccion.recursos %}
-          <div class="seccion-recursos">
-            <h4><i class="fas fa-paperclip"></i> Recursos</h4>
-            <ul class="recursos-lista">
-              {% for recurso in seccion.recursos %}
-              <li class="recurso-item">
-                <a href="{{ recurso.url }}" download class="recurso-link">
-                  <i class="fas fa-download"></i> {{ recurso.nombre }}
+
+          <!-- Section Content -->
+          {% if seccion.es_gratis or (current_user.is_authenticated and venta) %}
+          <div class="border-t" style="border-color: var(--border-light); padding-top: 1rem;">
+            {% if seccion.video_url or seccion.video_file %}
+            <div class="video-container bg-gray-900 rounded-lg overflow-hidden mb-4">
+              {% if seccion.video_url %}
+                {% if 'youtube.com' in seccion.video_url or 'youtu.be' in seccion.video_url %}
+                  {% set video_id = seccion.video_url.split('v=')[1].split('&')[0] if 'v=' in seccion.video_url else seccion.video_url.split('/')[-1] %}
+                  <div class="youtube-player-container aspect-video">
+                    <lite-youtube
+                      videoid="{{ video_id }}"
+                      params="rel=0"
+                      style="background-image: url('https://i.ytimg.com/vi/{{ video_id }}/hqdefault.jpg'); width: 100%; height: 100%;"
+                    ></lite-youtube>
+                  </div>
+                {% else %}
+                  <div class="aspect-video">
+                    <iframe
+                      src="{{ seccion.video_url }}"
+                      frameborder="0"
+                      allowfullscreen
+                      id="video-{{ seccion.id }}"
+                      class="w-full h-full"
+                    ></iframe>
+                  </div>
+                {% endif %}
+              {% elif seccion.video_file %}
+              <div class="aspect-video">
+                <video controls id="video-{{ seccion.id }}" class="w-full h-full">
+                  <source
+                    src="{{ url_for('static', filename='uploads/videos/' + seccion.video_file) }}"
+                    type="video/mp4"
+                  />
+                  Tu navegador no soporta el elemento de video.
+                </video>
+              </div>
+              {% endif %}
+
+              <!-- Video Progress Bar -->
+              <div class="bg-gray-800 p-4 rounded-b-lg">
+                <div class="flex items-center justify-between mb-2">
+                  <span class="text-sm text-gray-300" id="texto-progreso-{{ seccion.id }}">0% visto</span>
+                  <label class="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      id="completado-{{ seccion.id }}"
+                      class="video-completado w-4 h-4 text-green-500 rounded focus:ring-green-500"
+                      {% if seccion.id in secciones_completadas %}checked{% endif %}
+                    />
+                    <span class="text-sm text-gray-300">Marcar como completado</span>
+                  </label>
+                </div>
+                <div class="progress-bar h-2">
+                  <div
+                    class="progress-fill h-full rounded-full transition-all duration-300"
+                    id="progreso-video-{{ seccion.id }}"
+                    style="width: 0%; background: var(--gradient-emerald-teal);"
+                  ></div>
+                </div>
+              </div>
+            </div>
+            {% endif %}
+            
+            {% if seccion.recursos %}
+            <div class="mt-4">
+              <h4 class="text-lg font-semibold mb-3 flex items-center gap-2" style="color: var(--text-primary)">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"></path>
+                </svg>
+                Recursos
+              </h4>
+              <div class="grid gap-2">
+                {% for recurso in seccion.recursos %}
+                <a href="{{ recurso.url }}" download class="flex items-center gap-3 p-3 rounded-lg border hover:bg-gray-50 transition-colors" style="border-color: var(--border-light);">
+                  <svg class="w-5 h-5" style="color: var(--color-primary)" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                  </svg>
+                  <span style="color: var(--text-primary)" class="font-medium">{{ recurso.nombre }}</span>
                 </a>
-              </li>
-              {% endfor %}
-            </ul>
+                {% endfor %}
+              </div>
+            </div>
+            {% endif %}
+          </div>
+          {% else %}
+          <!-- Locked Content -->
+          <div class="border-t" style="border-color: var(--border-light); padding-top: 1rem;">
+            <div class="text-center py-8 px-4 bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg">
+              <div class="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+                </svg>
+              </div>
+              <h4 class="text-lg font-semibold mb-2" style="color: var(--text-primary)">Contenido Premium</h4>
+              <p style="color: var(--text-secondary)" class="mb-4">
+                Este contenido está bloqueado. Compra el curso para acceder a todas las lecciones.
+              </p>
+              <a href="{{ url_for('comprar_curso', curso_id=curso.id) }}" class="btn-gradient">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z"></path>
+                </svg>
+                Desbloquear Curso
+              </a>
+            </div>
+          </div>
+          {% endif %}
+          
+          <!-- Admin Actions -->
+          {% if current_user.is_authenticated and current_user.rol == 'admin' %}
+          <div class="border-t mt-4 pt-4 flex gap-3" style="border-color: var(--border-light);">
+            <a href="{{ url_for('editar_seccion', curso_id=curso.id, seccion_id=seccion.id) }}" class="btn-gradient">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+              </svg>
+              Editar
+            </a>
+            <form method="POST" action="{{ url_for('eliminar_seccion', curso_id=curso.id, seccion_id=seccion.id) }}" class="inline">
+              <button type="submit" class="btn-ghost-gradient" style="border-color: #ef4444; color: #ef4444;" onclick="return confirm('¿Estás seguro de eliminar esta sección?')">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                </svg>
+                Eliminar
+              </button>
+            </form>
           </div>
           {% endif %}
         </div>
-        {% else %}
-        <div class="seccion-bloqueada">
-          <div class="bloqueado-icono">
-            <i class="fas fa-lock"></i>
-          </div>
-          <p class="bloqueado-texto">
-            Este contenido está bloqueado. Compra el curso para acceder a todas
-            las lecciones.
-          </p>
-          <a
-            href="{{ url_for('comprar_curso', curso_id=curso.id) }}"
-            class="btn btn-desbloquear"
-          >
-            Desbloquear Curso
-          </a>
-        </div>
-        {% endif %} {% if current_user.is_authenticated and current_user.rol ==
-        'admin' %}
-        <div class="seccion-admin-actions">
-          <a
-            href="{{ url_for('editar_seccion', curso_id=curso.id, seccion_id=seccion.id) }}"
-            class="btn btn-editar-seccion"
-          >
-            <i class="fas fa-edit"></i> Editar
-          </a>
-          <form
-            method="POST"
-            action="{{ url_for('eliminar_seccion', curso_id=curso.id, seccion_id=seccion.id) }}"
-            class="form-eliminar-seccion"
-          >
-            <button
-              type="submit"
-              class="btn btn-eliminar-seccion"
-              onclick="return confirm('¿Estás seguro de eliminar esta sección?')"
-            >
-              <i class="fas fa-trash-alt"></i> Eliminar
-            </button>
-          </form>
-        </div>
-        {% endif %}
       </div>
       {% endfor %}
     </div>

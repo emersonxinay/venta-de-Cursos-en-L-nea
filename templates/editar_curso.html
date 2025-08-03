@@ -5,10 +5,10 @@ content %}
 <form method="POST" action="{{ url_for('editar_curso', curso_id=curso.id) }}">
   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
   <label for="nombre">Nombre:</label>
-  <input type="text" name="nombre" value="{{ curso.nombre }}" required />
+  <input type="text" name="nombre" value="{{ curso.nombre }}" class="input-gradient" required />
   <br />
   <label for="descripcion">Descripción:</label>
-  <textarea name="descripcion" required>{{ curso.descripcion }}</textarea>
+  <textarea name="descripcion" class="input-gradient" required>{{ curso.descripcion }}</textarea>
   <br />
   <label for="precio">Precio:</label>
   <input
@@ -16,9 +16,10 @@ content %}
     step="0.01"
     name="precio"
     value="{{ curso.precio }}"
+    class="input-gradient"
     required
   />
   <br />
-  <button type="submit">Actualizar Curso</button>
+  <button type="submit" class="btn-gradient">Actualizar Curso</button>
 </form>
 {% endblock %}

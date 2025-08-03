@@ -45,7 +45,7 @@
       action="{{ url_for('quitar_acceso', venta_id=venta.id) }}"
       style="display:inline;"
     >
-      <button type="submit">Quitar Acceso</button>
+      <button type="submit" class="btn-ghost-gradient danger">Quitar Acceso</button>
     </form>
     {% elif venta.estado_transferencia == 'devuelta' %}
     <span>Acceso Quitado</span>
@@ -54,7 +54,7 @@
       action="{{ url_for('activar_acceso', venta_id=venta.id) }}"
       style="display:inline;"
     >
-      <button type="submit">Activar Acceso</button>
+      <button type="submit" class="btn-gradient success">Activar Acceso</button>
     </form>
     {% endif %}
   </li>

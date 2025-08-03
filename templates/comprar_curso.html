@@ -1,108 +1,237 @@
-{% extends "base.html" %} {% block title %}Comprar Curso{% endblock %} {% block
-content %}
-<div class="curso-compra-container">
-  <div class="curso-compra-header">
-    <h1 class="curso-compra-title">
-      Comprar Curso: <span class="curso-nombre">{{ curso.nombre }}</span>
-    </h1>
-    <p class="curso-compra-descripcion">{{ curso.descripcion }}</p>
-    <div class="curso-compra-precio">
-      <span class="precio-etiqueta">Precio:</span>
-      <span class="precio-valor">{{ curso.precio }} USD</span>
+{% extends "base.html" %}
+{% block title %}Comprar Curso - {{ curso.nombre }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-6">
+  <!-- Header del Curso -->
+  <div class="mb-8 animate-fadeIn">
+    <div class="gradient-card" style="background: var(--gradient-primary)">
+      <div class="gradient-card-body p-6">
+        <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+          <div class="flex-1">
+            <h1 class="text-3xl font-bold text-white mb-3">
+              {{ curso.nombre }}
+            </h1>
+            <p class="text-white/90 text-lg mb-4">
+              {{ curso.descripcion }}
+            </p>
+            <div class="flex items-center gap-2">
+              <span class="text-white/80">Precio:</span>
+              <span class="text-3xl font-bold text-white">${{ curso.precio }} USD</span>
+            </div>
+          </div>
+          
+          <!-- Course Preview -->
+          <div class="lg:w-80">
+            <div class="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
+              <svg class="w-16 h-16 mx-auto mb-3 text-white/60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+              </svg>
+              <p class="text-white/80 text-center text-sm">Vista previa del curso</p>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 
-  <div class="curso-compra-form">
-    <form
-      method="POST"
-      action="{{ url_for('comprar_curso', curso_id=curso.id) }}"
-      class="payment-form"
-    >
-      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+  <!-- Formulario de Compra -->
+  <div class="animate-fadeInUp delay-200">
+    <div class="max-w-2xl mx-auto">
+      <div class="card">
+        <div class="card-body">
+          <h2 class="text-2xl font-bold mb-6" style="color: var(--text-primary)">
+            Finalizar Compra
+          </h2>
+          
+          <form method="POST" action="{{ url_for('comprar_curso', curso_id=curso.id) }}" class="space-y-6">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
 
-      <div class="form-group-pago">
-        <label for="metodo" class="form-label-pago">Método de Pago:</label>
-        <select
-          name="metodo"
-          id="metodo"
-          class="form-select-pago"
-          required
-          onchange="mostrarFormularioPago()"
-        >
-          <option value="">Seleccione un método de pago</option>
-          <option value="stripe">Stripe</option>
-          <option value="paypal">PayPal</option>
-          <option value="transferencia">Transferencia Bancaria</option>
-        </select>
-      </div>
+            <!-- Método de Pago -->
+            <div class="form-group">
+              <label for="metodo" class="form-label" style="color: var(--text-primary)">
+                Método de Pago
+              </label>
+              <select name="metodo" id="metodo" class="input-standard" required onchange="mostrarFormularioPago()">
+                <option value="">Seleccione un método de pago</option>
+                <option value="stripe">💳 Stripe (Tarjeta de Crédito)</option>
+                <option value="paypal">🅿️ PayPal</option>
+                <option value="transferencia">🏦 Transferencia Bancaria</option>
+              </select>
+            </div>
 
-      <div class="form-group-pago">
-        <label for="duracion" class="form-label-pago"
-          >Duración del Acceso:</label
-        >
-        <select name="duracion" id="duracion" class="form-select-pago" required>
-          <option value="1_mes">1 Mes</option>
-          <option value="6_meses">6 Meses</option>
-          <option value="1_ano">1 Año</option>
-        </select>
-      </div>
+            <!-- Duración del Acceso -->
+            <div class="form-group">
+              <label for="duracion" class="form-label" style="color: var(--text-primary)">
+                Duración del Acceso
+              </label>
+              <select name="duracion" id="duracion" class="input-standard" required>
+                <option value="1_mes">1 Mes - ${{ curso.precio }}</option>
+                <option value="6_meses">6 Meses - ${{ (curso.precio * 5)|round(2) }}</option>
+                <option value="1_ano">1 Año - ${{ (curso.precio * 10)|round(2) }}</option>
+              </select>
+            </div>
 
-      <!-- Formulario de Stripe -->
-      <div id="stripe-form" class="metodo-pago-form" style="display: none;">
-        <button type="submit" class="btn-pago stripe-btn">
-          <i class="fab fa-cc-stripe"></i> Pagar con Stripe
-        </button>
-      </div>
+            <!-- Botones de Pago -->
+            <div id="stripe-form" class="payment-method-form" style="display: none;">
+              <div class="bg-blue-50 p-4 rounded-lg border border-blue-200 mb-4">
+                <div class="flex items-center gap-3">
+                  <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path>
+                  </svg>
+                  <div>
+                    <h3 class="font-medium text-blue-900">Pago con Tarjeta</h3>
+                    <p class="text-sm text-blue-700">Procesamiento seguro mediante Stripe</p>
+                  </div>
+                </div>
+              </div>
+              <button type="submit" class="btn-gradient w-full">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path>
+                </svg>
+                Pagar con Stripe
+              </button>
+            </div>
 
-      <!-- Formulario de PayPal -->
-      <div id="paypal-form" class="metodo-pago-form" style="display: none;">
-        <button type="submit" class="btn-pago paypal-btn">
-          <i class="fab fa-paypal"></i> Pagar con PayPal
-        </button>
-      </div>
+            <div id="paypal-form" class="payment-method-form" style="display: none;">
+              <div class="bg-yellow-50 p-4 rounded-lg border border-yellow-200 mb-4">
+                <div class="flex items-center gap-3">
+                  <svg class="w-6 h-6 text-yellow-600" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M7.076 21.337H2.47a.641.641 0 0 1-.633-.74L4.944.901C5.026.382 5.474 0 5.998 0h7.46c2.57 0 4.578.543 5.69 1.81 1.01 1.15 1.304 2.42 1.012 4.287-.023.143-.047.288-.077.437-.983 5.05-4.349 6.797-8.647 6.797h-2.19c-.524 0-.968.382-1.05.9l-1.12 7.106zm14.146-14.42a3.35 3.35 0 0 0-.607-.463c-.314-.2-.672-.370-1.085-.523a9.861 9.861 0 0 0-1.357-.26 9.21 9.21 0 0 0-1.51-.116H9.78L8.69 12.01h2.19c4.298 0 7.664-1.747 8.647-6.797.03-.149.054-.294.077-.437a4.216 4.216 0 0 0-.382-1.759z"/>
+                  </svg>
+                  <div>
+                    <h3 class="font-medium text-yellow-900">Pago con PayPal</h3>
+                    <p class="text-sm text-yellow-700">Rápido y seguro</p>
+                  </div>
+                </div>
+              </div>
+              <button type="submit" class="btn-gradient warning w-full">
+                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M7.076 21.337H2.47a.641.641 0 0 1-.633-.74L4.944.901C5.026.382 5.474 0 5.998 0h7.46c2.57 0 4.578.543 5.69 1.81 1.01 1.15 1.304 2.42 1.012 4.287-.023.143-.047.288-.077.437-.983 5.05-4.349 6.797-8.647 6.797h-2.19c-.524 0-.968.382-1.05.9l-1.12 7.106zm14.146-14.42a3.35 3.35 0 0 0-.607-.463c-.314-.2-.672-.370-1.085-.523a9.861 9.861 0 0 0-1.357-.26 9.21 9.21 0 0 0-1.51-.116H9.78L8.69 12.01h2.19c4.298 0 7.664-1.747 8.647-6.797.03-.149.054-.294.077-.437a4.216 4.216 0 0 0-.382-1.759z"/>
+                </svg>
+                Pagar con PayPal
+              </button>
+            </div>
 
-      <!-- Formulario de Transferencia Bancaria -->
-      <div
-        id="transferencia-form"
-        class="metodo-pago-form"
-        style="display: none;"
-      >
-        <button type="submit" class="btn-pago transferencia-btn">
-          <i class="fas fa-university"></i> Pagar con Transferencia Bancaria
-        </button>
+            <div id="transferencia-form" class="payment-method-form" style="display: none;">
+              <div class="bg-green-50 p-4 rounded-lg border border-green-200 mb-4">
+                <div class="flex items-center gap-3">
+                  <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 21v-8.25M15.75 21v-8.25M8.25 21v-8.25M3 9l9-6 9 6m-1.5 12V10.332A48.36 48.36 0 0012 9.75c-2.551 0-5.056.2-7.5.582V21M3 21h18M12 6.75h.008v.008H12V6.75z"></path>
+                  </svg>
+                  <div>
+                    <h3 class="font-medium text-green-900">Transferencia Bancaria</h3>
+                    <p class="text-sm text-green-700">Procesamiento manual - 24-48h</p>
+                  </div>
+                </div>
+              </div>
+              <button type="submit" class="btn-gradient success w-full">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 21v-8.25M15.75 21v-8.25M8.25 21v-8.25M3 9l9-6 9 6m-1.5 12V10.332A48.36 48.36 0 0012 9.75c-2.551 0-5.056.2-7.5.582V21M3 21h18M12 6.75h.008v.008H12V6.75z"></path>
+                </svg>
+                Pagar con Transferencia
+              </button>
+            </div>
+          </form>
+        </div>
       </div>
-    </form>
+    </div>
   </div>
 
-  <div class="curso-compra-garantia">
-    <div class="garantia-icono">
-      <i class="fas fa-shield-alt"></i>
-    </div>
-    <div class="garantia-texto">
-      <h3 class="garantia-titulo">Invierte en quien serás mañana</h3>
-      <p class="garantia-descripcion">
-        El mejor proyecto en el que trabajarás siempre serás tú. Esta es tu
-        próxima gran inversión.
-      </p>
+  <!-- Garantía y Beneficios -->
+  <div class="animate-fadeInUp delay-300 mt-8">
+    <div class="max-w-4xl mx-auto">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        
+        <!-- Garantía -->
+        <div class="card text-center">
+          <div class="card-body">
+            <div class="w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center" style="background: var(--gradient-emerald-teal)">
+              <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+              </svg>
+            </div>
+            <h3 class="font-bold mb-2" style="color: var(--text-primary)">Garantía de 30 días</h3>
+            <p class="text-sm" style="color: var(--text-secondary)">Si no estás satisfecho, te devolvemos tu dinero</p>
+          </div>
+        </div>
+
+        <!-- Acceso Ilimitado -->
+        <div class="card text-center">
+          <div class="card-body">
+            <div class="w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center" style="background: var(--gradient-blue-purple)">
+              <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+            </div>
+            <h3 class="font-bold mb-2" style="color: var(--text-primary)">Acceso Completo</h3>
+            <p class="text-sm" style="color: var(--text-secondary)">Todo el contenido disponible durante tu suscripción</p>
+          </div>
+        </div>
+
+        <!-- Soporte -->
+        <div class="card text-center">
+          <div class="card-body">
+            <div class="w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center" style="background: var(--gradient-purple-pink)">
+              <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
+              </svg>
+            </div>
+            <h3 class="font-bold mb-2" style="color: var(--text-primary)">Soporte 24/7</h3>
+            <p class="text-sm" style="color: var(--text-secondary)">Estamos aquí para ayudarte en tu aprendizaje</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Mensaje Motivacional -->
+      <div class="mt-8 text-center">
+        <div class="card">
+          <div class="card-body">
+            <h3 class="text-xl font-bold mb-3" style="color: var(--text-primary)">
+              🚀 Invierte en quien serás mañana
+            </h3>
+            <p style="color: var(--text-secondary)">
+              El mejor proyecto en el que trabajarás siempre serás tú. Esta es tu próxima gran inversión para el futuro que mereces.
+            </p>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </div>
 
+{% endblock %}
+
+{% block extra_js %}
 <script>
   function mostrarFormularioPago() {
-    var metodo = document.getElementById('metodo').value;
-    document.getElementById('stripe-form').style.display = 'none';
-    document.getElementById('paypal-form').style.display = 'none';
-    document.getElementById('transferencia-form').style.display = 'none';
+    const metodo = document.getElementById('metodo').value;
+    const forms = ['stripe-form', 'paypal-form', 'transferencia-form'];
+    
+    // Ocultar todos los formularios
+    forms.forEach(formId => {
+      const form = document.getElementById(formId);
+      if (form) {
+        form.style.display = 'none';
+        form.classList.remove('animate-fadeIn');
+      }
+    });
 
-    if (metodo === 'stripe') {
-      document.getElementById('stripe-form').style.display = 'block';
-    } else if (metodo === 'paypal') {
-      document.getElementById('paypal-form').style.display = 'block';
-    } else if (metodo === 'transferencia') {
-      document.getElementById('transferencia-form').style.display = 'block';
+    // Mostrar el formulario seleccionado con animación
+    if (metodo) {
+      const selectedForm = document.getElementById(metodo + '-form');
+      if (selectedForm) {
+        selectedForm.style.display = 'block';
+        selectedForm.classList.add('animate-fadeIn');
+      }
     }
   }
+
+  // Inicializar cuando el DOM esté listo
+  document.addEventListener('DOMContentLoaded', function() {
+    // Ocultar todos los formularios al cargar
+    mostrarFormularioPago();
+  });
 </script>
 
 {% endblock %}

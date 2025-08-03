@@ -1,49 +1,209 @@
-<header>
-  <!-- Parte superior: Logo y usuario -->
-  <div class="top-bar">
-    <div class="logo-container">
-      <a class="logo" href="{{ url_for('dashboard') }}">CompilandoCode</a>
+<!-- Navegación Principal con Degradado -->
+<nav class="navbar-gradient">
+  <div class="container-fluid">
+    <div class="navbar-container h-16">
+      <!-- Logo con Degradado -->
+      <div class="flex items-center gap-8">
+        <a href="{{ url_for('dashboard') }}" class="navbar-brand">
+          <div class="w-10 h-10 rounded-lg flex-center" style="background: var(--gradient-blue-purple);">
+            <svg class="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M10.394 2.08a1 1 0 00-.788 0l-7 3a1 1 0 000 1.84L5.25 8.051a.999.999 0 01.356-.257l4-1.714a1 1 0 11.788 1.84L7.667 9.088l1.94.831a1 1 0 00.787 0l7-3a1 1 0 000-1.84l-7-3zM3.31 9.397L5 10.12v4.102a8.969 8.969 0 00-1.05-.174 1 1 0 01-.89-.89 11.115 11.115 0 01.25-3.762zM9.3 16.573A9.026 9.026 0 007 14.935v-3.957l1.818.78a3 3 0 002.364 0l5.508-2.361a11.026 11.026 0 01.25 3.762 1 1 0 01-.89.89 8.968 8.968 0 00-5.35 2.524 1 1 0 01-1.4 0zM6 18a1 1 0 001-1v-2.065a8.935 8.935 0 00-2-.712V17a1 1 0 001 1z"></path>
+            </svg>
+          </div>
+          <span class="text-xl font-bold text-white">CompilandoCode</span>
+        </a>
+        
+        <!-- Desktop Navigation con Degradados -->
+        <div class="navbar-menu">
+          <a href="{{ url_for('dashboard') }}" class="navbar-link {{ 'active' if request.endpoint == 'dashboard' else '' }}">
+            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z"></path>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5a2 2 0 012-2h4a2 2 0 012 2v4H8V5z"></path>
+            </svg>
+            Dashboard
+          </a>
+          
+          {% if current_user.is_authenticated and current_user.rol == 'admin' %}
+            <a href="{{ url_for('nuevo_curso') }}" class="navbar-link {{ 'active' if request.endpoint == 'nuevo_curso' else '' }}">
+              <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+            </svg>
+              Crear Curso
+            </a>
+            
+            <a href="{{ url_for('admin_dashboard') }}" class="navbar-link {{ 'active' if request.endpoint == 'admin_dashboard' else '' }}">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+              </svg>
+              Admin Panel
+            </a>
+            
+            <a href="{{ url_for('transferencias_pendientes') }}" class="navbar-link {{ 'active' if request.endpoint == 'transferencias_pendientes' else '' }} relative">
+              <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"></path>
+              </svg>
+              Transferencias
+              <!-- Notification badge con degradado -->
+              <span class="badge-gradient danger absolute -top-1 -right-1 h-5 w-5 flex-center text-xs font-medium">3</span>
+            </a>
+          {% endif %}
+        </div>
+      </div>
+      
+      <!-- User Menu con Degradados -->
+      <div class="flex items-center gap-4">
+        {% if current_user.is_authenticated %}
+          <!-- Notifications -->
+          <button class="relative p-2 text-white hover:text-blue-200 transition-colors" x-data="{ open: false }" @click="open = !open">
+            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-5 5v-5zM10.97 4.97a.235.235 0 00-.02.022L7.477 9.417 5.384 7.323a.75.75 0 00-1.06 1.061L6.97 11.03a.75.75 0 001.079-.02l3.992-4.99a.75.75 0 00-1.071-1.05z"></path>
+            </svg>
+            <span class="absolute top-0 right-0 badge-gradient danger rounded-full h-2 w-2"></span>
+          </button>
+          
+          <!-- User Dropdown -->
+          <div class="relative">
+            <button id="user-menu-button" class="flex items-center gap-2 p-2 text-white hover:text-blue-200 transition-colors">
+              <div class="w-8 h-8 rounded-full flex items-center justify-center border-gradient">
+                <span class="text-white font-medium text-sm">{{ current_user.nombre[0].upper() }}</span>
+              </div>
+              <span class="hidden sm:block font-medium">{{ current_user.nombre }}</span>
+              <svg id="dropdown-arrow" class="w-2.5 h-2.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+              </svg>
+            </button>
+            
+            <div id="user-dropdown" class="dropdown-menu gradient-card">
+              <a href="#" class="dropdown-item">
+                <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                </svg>
+                Mi Perfil
+              </a>
+              <a href="#" class="dropdown-item">
+                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                </svg>
+                Configuración
+              </a>
+              <hr class="my-1 border-gray-200 opacity-20">
+              <a href="{{ url_for('logout') }}" class="dropdown-item text-error-400">
+                <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
+                </svg>
+                Cerrar Sesión
+              </a>
+            </div>
+          </div>
+        {% else %}
+          <div class="flex items-center gap-2">
+            <a href="{{ url_for('login') }}" class="btn-ghost-gradient">Iniciar Sesión</a>
+            <a href="{{ url_for('register') }}" class="btn-gradient">Registrarse</a>
+          </div>
+        {% endif %}
+        
+        <!-- Mobile menu button -->
+        <button id="mobile-menu-button" class="lg:hidden p-2 text-white hover:text-blue-200 transition-colors">
+          <svg id="hamburger-icon" class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+          </svg>
+          <svg id="close-icon" class="w-3 h-3 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+          </svg>
+        </button>
+      </div>
     </div>
-    <div class="user-info">
-      {% if current_user.is_authenticated %}
-      <span>Bienvenido, {{ current_user.nombre }}</span>
-      <a href="{{ url_for('logout') }}">Cerrar sesión</a>
-      {% else %}
-      <a href="{{ url_for('login') }}">Login</a>
-      <a href="{{ url_for('register') }}">Register</a>
-      {% endif %}
+    
+    <!-- Mobile Menu con Degradado -->
+    <div id="mobile-menu" class="mobile-menu lg:hidden border-t border-gray-700/20 py-4 hidden">
+      <div class="mobile-menu-container space-y-1 px-4">
+        <a href="{{ url_for('dashboard') }}" class="mobile-menu-item {{ 'active' if request.endpoint == 'dashboard' else '' }}">
+          <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
+              </svg>
+          <span>Dashboard</span>
+        </a>
+        
+        {% if current_user.is_authenticated and current_user.rol == 'admin' %}
+          <a href="{{ url_for('nuevo_curso') }}" class="mobile-menu-item {{ 'active' if request.endpoint == 'nuevo_curso' else '' }}">
+            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+            </svg>
+            <span>Crear Curso</span>
+          </a>
+          
+          <a href="{{ url_for('admin_dashboard') }}" class="mobile-menu-item {{ 'active' if request.endpoint == 'admin_dashboard' else '' }}">
+            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+            </svg>
+            <span>Admin Panel</span>
+          </a>
+          
+          <a href="{{ url_for('transferencias_pendientes') }}" class="mobile-menu-item {{ 'active' if request.endpoint == 'transferencias_pendientes' else '' }}">
+            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"></path>
+            </svg>
+            <span>Transferencias</span>
+          </a>
+        {% endif %}
+      </div>
     </div>
   </div>
+</nav>
 
-  <!-- Barra lateral: Menú -->
-  <nav class="sidebar" id="sidebar">
-    <div class="menu-toggle" id="menu-toggle">
-      <span></span>
-      <span></span>
-      <span></span>
-    </div>
-    <ul id="menu">
-      <li><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
-      {% if current_user.is_authenticated %} {% if current_user.rol == 'admin'
-      %}
-      <li><a href="{{ url_for('nuevo_curso') }}">Crear Nuevo Curso</a></li>
-      <li>
-        <a href="{{ url_for('transferencias_pendientes') }}"
-          >Transferencias Pendientes</a
-        >
-      </li>
-      <li>
-        <a href="{{ url_for('admin_dashboard') }}"
-          >Dashboard de Administrador</a
-        >
-      </li>
-      {% endif %} {% endif %}
-    </ul>
-  </nav>
-</header>
+<style>
+.navbar-nav-link {
+  @apply flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-md transition-colors;
+}
+
+.navbar-nav-link.active {
+  @apply text-primary-600 bg-primary-50;
+}
+
+.mobile-nav-link {
+  @apply block px-3 py-2 text-base font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-md transition-colors;
+}
+
+.mobile-nav-link.active {
+  @apply text-primary-600 bg-primary-50;
+}
+</style>
 
 <script>
-  document.getElementById('menu-toggle').addEventListener('click', function() {
-    document.getElementById('sidebar').classList.toggle('show');
+  document.addEventListener('DOMContentLoaded', function() {
+    // User dropdown functionality
+    const userMenuButton = document.getElementById('user-menu-button');
+    const userDropdown = document.getElementById('user-dropdown');
+    const dropdownArrow = document.getElementById('dropdown-arrow');
+    
+    if (userMenuButton && userDropdown) {
+      userMenuButton.addEventListener('click', function() {
+        userDropdown.classList.toggle('open');
+        dropdownArrow.style.transform = userDropdown.classList.contains('open') ? 'rotate(180deg)' : 'rotate(0deg)';
+      });
+      
+      // Close dropdown when clicking outside
+      document.addEventListener('click', function(event) {
+        if (!userMenuButton.contains(event.target) && !userDropdown.contains(event.target)) {
+          userDropdown.classList.remove('open');
+          dropdownArrow.style.transform = 'rotate(0deg)';
+        }
+      });
+    }
+    
+    // Mobile menu functionality
+    const mobileMenuButton = document.getElementById('mobile-menu-button');
+    const mobileMenu = document.getElementById('mobile-menu');
+    const hamburgerIcon = document.getElementById('hamburger-icon');
+    const closeIcon = document.getElementById('close-icon');
+    
+    if (mobileMenuButton && mobileMenu) {
+      mobileMenuButton.addEventListener('click', function() {
+        mobileMenu.classList.toggle('hidden');
+        hamburgerIcon.classList.toggle('hidden');
+        closeIcon.classList.toggle('hidden');
+      });
+    }
   });
 </script>
