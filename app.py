@@ -17,21 +17,44 @@ import os
 
 from models import Certificado, HistoricoProgreso, ProgresoUsuario
 
-# Cargar variables de entorno desde el archivo .env
-load_dotenv(override=True)
-# Verifica las claves cargadas
-stripe_api_key = os.getenv('STRIPE_API_KEY_SANDBOX')
-stripe_publishable_key = os.getenv('STRIPE_PUBLISHABLE_KEY_SANDBOX')
-api_key = os.getenv('STRIPE_API_KEY_SANDBOX')
-# pruebas apis stripe
+# Cargar variables de entorno
+load_dotenv()
 
-# fin de pruebas api stripe
+# Configuración de la aplicación
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:emerson123@localhost/db_venta_cursos'
-app.config['SECRET_KEY'] = 'mysecret'
+
+# Configuración robusta de base de datos
+def get_database_url():
+    """Construir URL de base de datos desde variables de entorno"""
+    # Para producción con variables de entorno
+    if os.getenv('DATABASE_URL'):
+        return os.getenv('DATABASE_URL')
+    
+    # Para configuración manual
+    db_host = os.getenv('DB_HOST', 'localhost')
+    db_port = os.getenv('DB_PORT', '5432')
+    db_name = os.getenv('DB_NAME', 'db_venta_cursos')
+    db_user = os.getenv('DB_USER', 'postgres')
+    db_password = os.getenv('DB_PASSWORD')
+    
+    if not db_password:
+        raise ValueError("DB_PASSWORD es requerido. Configura las variables de entorno.")
+    
+    return f"postgresql://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}"
+
+# Configuración de aplicación
+app.config['SQLALCHEMY_DATABASE_URI'] = get_database_url()
+app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', os.urandom(32))
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config['UPLOAD_FOLDER'] = 'static/uploads'
-app.config['MAX_CONTENT_PATH'] = 16 * 1024 * 1024  # 16 MB
+app.config['UPLOAD_FOLDER'] = os.getenv('UPLOAD_FOLDER', 'static/uploads')
+app.config['MAX_CONTENT_PATH'] = int(os.getenv('MAX_CONTENT_PATH', 16 * 1024 * 1024))
+
+# Configuración de seguridad para producción
+if os.getenv('FLASK_ENV') == 'production':
+    app.config['SESSION_COOKIE_SECURE'] = True
+    app.config['SESSION_COOKIE_HTTPONLY'] = True
+    app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+    app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(hours=1)
 csrf = CSRFProtect(app)
 
 
@@ -43,25 +66,44 @@ login_manager.login_view = 'login'
 # Después de inicializar db
 migrate = Migrate(app, db)
 
-# Configurar Stripe y PayPal con las variables de entorno
-app_mode = os.getenv('APP_MODE', 'development')
+# Configuración de servicios de pago
+def configure_payment_services():
+    """Configurar Stripe y PayPal según el entorno"""
+    app_mode = os.getenv('FLASK_ENV', 'development')
+    
+    if app_mode == 'production':
+        # Configuración de producción
+        stripe_key = os.getenv('STRIPE_API_KEY_LIVE')
+        stripe_pub_key = os.getenv('STRIPE_PUBLISHABLE_KEY_LIVE')
+        paypal_client_id = os.getenv('PAYPAL_CLIENT_ID_LIVE')
+        paypal_client_secret = os.getenv('PAYPAL_CLIENT_SECRET_LIVE')
+        paypal_mode = "live"
+    else:
+        # Configuración de desarrollo/sandbox
+        stripe_key = os.getenv('STRIPE_API_KEY_SANDBOX')
+        stripe_pub_key = os.getenv('STRIPE_PUBLISHABLE_KEY_SANDBOX')
+        paypal_client_id = os.getenv('PAYPAL_CLIENT_ID_SANDBOX')
+        paypal_client_secret = os.getenv('PAYPAL_CLIENT_SECRET_SANDBOX')
+        paypal_mode = "sandbox"
+    
+    # Configurar Stripe
+    if stripe_key:
+        stripe.api_key = stripe_key
+        app.config['STRIPE_PUBLISHABLE_KEY'] = stripe_pub_key
+    else:
+        app.logger.warning("Stripe no configurado - claves no encontradas")
+    
+    # Configurar PayPal
+    if paypal_client_id and paypal_client_secret:
+        paypalrestsdk.configure({
+            "mode": paypal_mode,
+            "client_id": paypal_client_id,
+            "client_secret": paypal_client_secret
+        })
+    else:
+        app.logger.warning("PayPal no configurado - claves no encontradas")
 
-if app_mode == 'production':
-    stripe.api_key = os.getenv('STRIPE_API_KEY_LIVE')
-    stripe_publishable_key = os.getenv('STRIPE_PUBLISHABLE_KEY_LIVE')
-    paypalrestsdk.configure({
-        "mode": "live",
-        "client_id": os.getenv('PAYPAL_CLIENT_ID_LIVE'),
-        "client_secret": os.getenv('PAYPAL_CLIENT_SECRET_LIVE')
-    })
-else:
-    stripe.api_key = os.getenv('STRIPE_API_KEY_SANDBOX')
-    stripe_publishable_key = os.getenv('STRIPE_PUBLISHABLE_KEY_SANDBOX')
-    paypalrestsdk.configure({
-        "mode": "sandbox",
-        "client_id": os.getenv('PAYPAL_CLIENT_ID_SANDBOX'),
-        "client_secret": os.getenv('PAYPAL_CLIENT_SECRET_SANDBOX')
-    })
+configure_payment_services()
 
 
 UPLOAD_FOLDER = 'static/uploads'
