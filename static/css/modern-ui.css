@@ -272,6 +272,11 @@ body {
 
 .btn-gradient.warning {
   background: var(--gradient-orange-amber);
+  box-shadow: 0 4px 15px 0 rgba(251, 146, 60, 0.4);
+}
+
+.btn-gradient.warning:hover {
+  box-shadow: 0 8px 25px 0 rgba(251, 146, 60, 0.6);
 }
 
 /* Ghost Gradient Buttons */

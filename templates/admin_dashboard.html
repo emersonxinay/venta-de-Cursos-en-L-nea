@@ -1,438 +1,676 @@
-{% extends "base.html" %} {% block title %}Dashboard de Administrador{% endblock
-%} {% block content %}
-<link
-  rel="stylesheet"
-  href="{{ url_for('static', filename='css/styles_admin_dashboard.css') }}"
-/>
+{% extends "base.html" %}
+{% block title %}Dashboard de Administrador - CompilandoCode{% endblock %}
 
-<h1>Dashboard de Administrador</h1>
+{% block extra_css %}
+<style>
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(1, 1fr);
+  gap: 1.25rem;
+}
 
-<section class="dashboard-section">
-  <h2>Gráficas</h2>
-  <div class="dashboard-grid">
-    <!-- Columna 1 -->
-    <div class="card">
-      <h3>Ventas Totales</h3>
-      <ul class="stats-list">
-        <li>Hoy: <span class="total-value">{{ total_dia }} USD</span></li>
-        <li>
-          Esta Semana: <span class="total-value">{{ total_semana }} USD</span>
-        </li>
-        <li>Este Mes: <span class="total-value">{{ total_mes }} USD</span></li>
-        <li>Este Año: <span class="total-value">{{ total_ano }} USD</span></li>
-      </ul>
-      <canvas id="ventasTotalesChart"></canvas>
-    </div>
-
-    <!-- Columna 2 -->
-    <div class="card">
-      <h3>Cursos Más Vendidos</h3>
-      <ul class="stats-list">
-        {% for curso, total_ventas in cursos_mas_vendidos %}
-        <li>
-          {{ curso }}:
-          <span class="total-value">{{ total_ventas }} ventas</span>
-        </li>
-        {% endfor %}
-      </ul>
-      <canvas id="cursosMasVendidosChart"></canvas>
-    </div>
-
-    <!-- Columna 3 -->
-    <div class="card">
-      <h3>Devoluciones</h3>
-      <ul class="stats-list">
-        {% for curso, total_devoluciones in devoluciones %}
-        <li>
-          {{ curso }}:
-          <span class="total-value">{{ total_devoluciones }} devoluciones</span>
-        </li>
-        {% endfor %}
-      </ul>
-      <canvas id="devolucionesChart"></canvas>
-    </div>
-
-    <!-- Fila completa -->
-    <div class="card full-width">
-      <h3>Ventas Netas</h3>
-      <div class="net-sales-grid">
-        <div class="net-sales-item">
-          <h4>Hoy</h4>
-          <p class="total-value">{{ ventas_netas_dia }} USD</p>
-        </div>
-        <div class="net-sales-item">
-          <h4>Esta Semana</h4>
-          <p class="total-value">{{ ventas_netas_semana }} USD</p>
-        </div>
-        <div class="net-sales-item">
-          <h4>Este Mes</h4>
-          <p class="total-value">{{ ventas_netas_mes }} USD</p>
-        </div>
-        <div class="net-sales-item">
-          <h4>Este Año</h4>
-          <p class="total-value">{{ ventas_netas_ano }} USD</p>
-        </div>
-      </div>
-      <canvas id="ventasNetasChart"></canvas>
-    </div>
-  </div>
-</section>
-
-<section class="dashboard-section">
-  <h2>Datos</h2>
-
-  <!-- Gestión de Cursos -->
-  <div class="table-section">
-    <div class="table-controls">
-      <div class="search-container">
-        <input
-          type="text"
-          id="course-search-input"
-          class="input-gradient"
-          placeholder="Buscar por nombre, descripción o precio..."
-        />
-        <span class="search-icon" style="font-size: 0.8em;">🔍</span>
-      </div>
-    </div>
-
-    <h3>Gestión de Cursos</h3>
-    <div class="table-container">
-      <table class="data-table" id="course-table">
-        <thead>
-          <tr>
-            <th>Nombre</th>
-            <th>Descripción</th>
-            <th>Precio</th>
-            <th>Acciones</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for curso in cursos %}
-          <tr
-            data-search="{{ curso.nombre.lower() }} {{ curso.descripcion.lower() }} {{ curso.precio|string }}"
-          >
-            <td>{{ curso.nombre }}</td>
-            <td>{{ curso.descripcion|truncate(100) }}</td>
-            <td class="price-cell">{{ curso.precio }} USD</td>
-            <td class="actions-cell">
-              <a
-                href="{{ url_for('editar_curso', curso_id=curso.id) }}"
-                class="btn-gradient"
-                >Editar</a
-              >
-              <form
-                method="POST"
-                action="{{ url_for('eliminar_curso', curso_id=curso.id) }}"
-              >
-                <input
-                  type="hidden"
-                  name="csrf_token"
-                  value="{{ csrf_token() }}"
-                />
-                <button type="submit" class="btn-ghost-gradient danger">Eliminar</button>
-              </form>
-            </td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-    </div>
-  </div>
-
-  <!-- Gestión de Usuarios -->
-  <div class="table-section">
-    <div class="table-controls">
-      <div class="search-container">
-        <input
-          type="text"
-          id="user-search-input"
-          class="input-gradient"
-          placeholder="Buscar por nombre o correo..."
-        />
-        <span class="search-icon" style="font-size: 0.8em;">🔍</span>
-      </div>
-    </div>
-
-    <h3>Gestión de Usuarios</h3>
-    <div class="table-container">
-      <table class="data-table" id="user-table">
-        <thead>
-          <tr>
-            <th>Nombre</th>
-            <th>Correo Electrónico</th>
-            <th>Acciones</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for usuario in usuarios %}
-          <tr
-            data-search="{{ usuario.nombre.lower() }} {{ usuario.correo.lower() }}"
-          >
-            <td>{{ usuario.nombre }}</td>
-            <td>{{ usuario.correo }}</td>
-            <td class="actions-cell">
-              <a
-                href="{{ url_for('editar_usuario', usuario_id=usuario.id) }}"
-                class="btn-gradient"
-                >Editar</a
-              >
-              <form
-                method="POST"
-                action="{{ url_for('eliminar_usuario', usuario_id=usuario.id) }}"
-              >
-                <input
-                  type="hidden"
-                  name="csrf_token"
-                  value="{{ csrf_token() }}"
-                />
-                <button type="submit" class="btn-ghost-gradient danger">Eliminar</button>
-              </form>
-            </td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-    </div>
-  </div>
-
-  <!-- Transferencias Pendientes -->
-  <div class="card-section">
-    <h3>Transferencias Pendientes</h3>
-    <div class="cards-container">
-      {% for transferencia in transferencias %}
-      <div class="card">
-        <h4>
-          {{ transferencia.usuario.nombre }} - {{ transferencia.curso.nombre }}
-        </h4>
-        <p>
-          Estado:
-          <span class="status-badge status-{{ transferencia.estado }}"
-            >{{ transferencia.estado }}</span
-          >
-        </p>
-        <div class="actions">
-          <form
-            method="POST"
-            action="{{ url_for('confirmar_transferencia', venta_id=transferencia.id) }}"
-          >
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
-            <button type="submit" class="btn-gradient success">Aprobar</button>
-          </form>
-          <form
-            method="POST"
-            action="{{ url_for('rechazar_transferencia', venta_id=transferencia.id) }}"
-          >
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
-            <button type="submit" class="btn-ghost-gradient danger">Rechazar</button>
-          </form>
-        </div>
-      </div>
-      {% endfor %}
-    </div>
-  </div>
-
-  <!-- Gestión de Accesos -->
-  <div class="table-section">
-    <div class="table-controls">
-      <div class="search-container">
-        <input
-          type="text"
-          id="access-search-input"
-          class="input-gradient"
-          placeholder="Buscar por usuario, curso, estado o fecha..."
-        />
-        <span class="search-icon" style="font-size: 0.8em;">🔍</span>
-      </div>
-    </div>
-
-    <h3>Gestión de Accesos</h3>
-    <div class="table-container">
-      <table class="data-table" id="access-table">
-        <thead>
-          <tr>
-            <th>Usuario</th>
-            <th>Curso</th>
-            <th>Fecha Compra</th>
-            <th>Fecha Expiración</th>
-            <th>Estado</th>
-            <th>Acciones</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for venta in ventas %}
-          <tr
-            data-search="{{ venta.usuario.nombre.lower() }} {{ venta.curso.nombre.lower() }} {% if venta.estado_transferencia == 'confirmada' %}activo{% elif venta.estado_transferencia == 'devuelta' %}inactivo{% endif %} {{ venta.fecha_venta.strftime('%d-%m-%Y') }} {{ venta.fecha_expiracion.strftime('%d-%m-%Y') }}"
-          >
-            <td>{{ venta.usuario.nombre }}</td>
-            <td>{{ venta.curso.nombre }}</td>
-            <td>{{ venta.fecha_venta.strftime('%d-%m-%Y') }}</td>
-            <td>{{ venta.fecha_expiracion.strftime('%d-%m-%Y') }}</td>
-            <td>
-              {% if venta.estado_transferencia == 'confirmada' %}
-              <span class="status-badge status-active">Activo</span>
-              {% elif venta.estado_transferencia == 'devuelta' %}
-              <span class="status-badge status-inactive">Inactivo</span>
-              {% endif %}
-            </td>
-            <td class="actions-cell">
-              {% if venta.estado_transferencia == 'confirmada' %}
-              <form
-                method="POST"
-                action="{{ url_for('quitar_acceso', venta_id=venta.id) }}"
-              >
-                <input
-                  type="hidden"
-                  name="csrf_token"
-                  value="{{ csrf_token() }}"
-                />
-                <button type="submit" class="btn-ghost-gradient warning">
-                  Quitar Acceso
-                </button>
-              </form>
-              {% elif venta.estado_transferencia == 'devuelta' %}
-              <form
-                method="POST"
-                action="{{ url_for('activar_acceso', venta_id=venta.id) }}"
-              >
-                <input
-                  type="hidden"
-                  name="csrf_token"
-                  value="{{ csrf_token() }}"
-                />
-                <button type="submit" class="btn-gradient success">
-                  Activar Acceso
-                </button>
-              </form>
-              {% endif %}
-            </td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-    </div>
-  </div>
-</section>
-
-<script>
-  // Función genérica para búsqueda
-  function setupSearch(inputId, tableId) {
-    const searchInput = document.getElementById(inputId);
-    const table = document.getElementById(tableId);
-    const rows = table.querySelectorAll('tbody tr');
-
-    const normalizeText = (text) => {
-      return text.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
-    };
-
-    searchInput.addEventListener('input', function() {
-      const searchTerm = normalizeText(this.value);
-
-      rows.forEach(function(row) {
-        const searchText = normalizeText(row.getAttribute('data-search'));
-        row.style.display = searchTerm === '' || searchText.includes(searchTerm) ? '' : 'none';
-      });
-    });
+@media (min-width: 640px) {
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
   }
+}
 
-  // Configurar buscadores
+@media (min-width: 1024px) {
+  .stats-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (min-width: 1280px) {
+  .stats-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+.stats-card {
+  @apply rounded-xl p-6 shadow-lg;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-light);
+}
+
+.net-sales-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+  margin: 1.5rem 0;
+}
+
+@media (min-width: 640px) {
+  .net-sales-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+.chart-container {
+  height: 300px;
+  margin-top: 1rem;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-6">
+  <!-- Header -->
+  <div class="mb-8 animate-fadeIn">
+    <div class="gradient-card mb-6" style="background: var(--gradient-primary)">
+      <div class="gradient-card-body p-6">
+        <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+          <div>
+            <h1 class="text-2xl md:text-3xl font-bold text-white mb-2">
+              Panel de Administración 📊
+            </h1>
+            <p class="text-white/90">
+              Gestiona tu plataforma y analiza el rendimiento de tus cursos
+            </p>
+          </div>
+          
+          <div class="flex flex-wrap items-center gap-3">
+            <a href="{{ url_for('nuevo_curso') }}" class="btn-gradient">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+              </svg>
+              Crear Curso
+            </a>
+            <a href="{{ url_for('transferencias_pendientes') }}" class="btn-ghost-gradient">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"></path>
+              </svg>
+              Transferencias
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Stats Overview -->
+  <section class="mb-8 animate-fadeInUp delay-200">
+    <h2 class="text-2xl font-bold mb-6" style="color: var(--text-primary)">Resumen de Ventas</h2>
+    
+    <div class="stats-grid mb-8">
+      <!-- Sales Stats -->
+      <div class="gradient-card hover-lift" style="background: var(--gradient-blue-purple)">
+        <div class="gradient-card-body">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="text-lg font-semibold text-white">Ventas Totales</h3>
+            <div class="w-10 h-10 bg-white/10 rounded-lg flex items-center justify-center">
+              <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"></path>
+              </svg>
+            </div>
+          </div>
+          <div class="space-y-2 text-white/90">
+            <div class="flex justify-between">
+              <span class="text-sm">Hoy:</span>
+              <span class="font-bold">${{ total_dia }}</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-sm">Semana:</span>
+              <span class="font-bold">${{ total_semana }}</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-sm">Mes:</span>
+              <span class="font-bold">${{ total_mes }}</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-sm">Año:</span>
+              <span class="font-bold">${{ total_ano }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Top Courses -->
+      <div class="gradient-card hover-lift" style="background: var(--gradient-purple-pink)">
+        <div class="gradient-card-body">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="text-lg font-semibold text-white">Cursos Populares</h3>
+            <div class="w-10 h-10 bg-white/10 rounded-lg flex items-center justify-center">
+              <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+            </div>
+          </div>
+          <div class="space-y-2 text-white/90">
+            {% for curso, total_ventas in cursos_mas_vendidos[:4] %}
+            <div class="flex justify-between">
+              <span class="text-sm truncate mr-2">{{ curso[:15] }}{{ '...' if curso|length > 15 else '' }}</span>
+              <span class="font-bold">{{ total_ventas }} ventas</span>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+
+      <!-- Returns -->
+      <div class="gradient-card hover-lift" style="background: var(--gradient-orange-amber)">
+        <div class="gradient-card-body">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="text-lg font-semibold text-white">Devoluciones</h3>
+            <div class="w-10 h-10 bg-white/10 rounded-lg flex items-center justify-center">
+              <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+            </div>
+          </div>
+          <div class="space-y-2 text-white/90">
+            {% for curso, total_devoluciones in devoluciones[:4] %}
+            <div class="flex justify-between">
+              <span class="text-sm truncate mr-2">{{ curso[:15] }}{{ '...' if curso|length > 15 else '' }}</span>
+              <span class="font-bold">{{ total_devoluciones }}</span>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Net Sales Chart -->
+    <div class="card hover-lift animate-fadeInUp delay-300">
+      <div class="card-body">
+        <h3 class="text-xl font-semibold mb-4" style="color: var(--text-primary)">Ventas Netas</h3>
+        <div class="net-sales-grid">
+          <div class="text-center p-4 rounded-lg" style="background: var(--bg-secondary);">
+            <h4 class="text-sm font-medium mb-2" style="color: var(--text-secondary)">Hoy</h4>
+            <p class="text-2xl font-bold" style="color: var(--color-primary)">${{ ventas_netas_dia }}</p>
+          </div>
+          <div class="text-center p-4 rounded-lg" style="background: var(--bg-secondary);">
+            <h4 class="text-sm font-medium mb-2" style="color: var(--text-secondary)">Semana</h4>
+            <p class="text-2xl font-bold" style="color: var(--color-primary)">${{ ventas_netas_semana }}</p>
+          </div>
+          <div class="text-center p-4 rounded-lg" style="background: var(--bg-secondary);">
+            <h4 class="text-sm font-medium mb-2" style="color: var(--text-secondary)">Mes</h4>
+            <p class="text-2xl font-bold" style="color: var(--color-primary)">${{ ventas_netas_mes }}</p>
+          </div>
+          <div class="text-center p-4 rounded-lg" style="background: var(--bg-secondary);">
+            <h4 class="text-sm font-medium mb-2" style="color: var(--text-secondary)">Año</h4>
+            <p class="text-2xl font-bold" style="color: var(--color-primary)">${{ ventas_netas_ano }}</p>
+          </div>
+        </div>
+        <div class="chart-container">
+          <canvas id="ventasNetasChart"></canvas>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Management Tables -->
+  <section class="space-y-8 animate-fadeInUp delay-400">
+    <h2 class="text-2xl font-bold" style="color: var(--text-primary)">Gestión de Datos</h2>
+
+    <!-- Course Management -->
+    <div class="card hover-lift">
+      <div class="card-body">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+          <h3 class="text-xl font-semibold" style="color: var(--text-primary)">Gestión de Cursos</h3>
+          <div class="input-group w-full sm:w-auto">
+            <div class="input-icon">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+              </svg>
+            </div>
+            <input
+              type="text"
+              id="course-search-input"
+              class="input-standard"
+              placeholder="Buscar cursos..."
+            />
+          </div>
+        </div>
+        
+        <div class="overflow-x-auto">
+          <table class="w-full" id="course-table">
+            <thead>
+              <tr class="border-b" style="border-color: var(--border-light);">
+                <th class="text-left py-3 px-4 font-semibold" style="color: var(--text-primary);">Nombre</th>
+                <th class="text-left py-3 px-4 font-semibold" style="color: var(--text-primary);">Descripción</th>
+                <th class="text-left py-3 px-4 font-semibold" style="color: var(--text-primary);">Precio</th>
+                <th class="text-left py-3 px-4 font-semibold" style="color: var(--text-primary);">Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for curso in cursos %}
+              <tr
+                class="border-b hover:bg-gray-50 transition-colors"
+                style="border-color: var(--border-light);"
+                data-search="{{ curso.nombre.lower() }} {{ curso.descripcion.lower() }} {{ curso.precio|string }}"
+              >
+                <td class="py-3 px-4" style="color: var(--text-primary);">{{ curso.nombre }}</td>
+                <td class="py-3 px-4" style="color: var(--text-secondary);">{{ curso.descripcion|truncate(100) }}</td>
+                <td class="py-3 px-4 font-bold" style="color: var(--color-primary);">${{ curso.precio }}</td>
+                <td class="py-3 px-4">
+                  <div class="flex items-center gap-2">
+                    <a
+                      href="{{ url_for('editar_curso', curso_id=curso.id) }}"
+                      class="btn-gradient btn-sm"
+                    >
+                      <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                      </svg>
+                      Editar
+                    </a>
+                    <form
+                      method="POST"
+                      action="{{ url_for('eliminar_curso', curso_id=curso.id) }}"
+                      class="inline"
+                    >
+                      <input
+                        type="hidden"
+                        name="csrf_token"
+                        value="{{ csrf_token() }}"
+                      />
+                      <button type="submit" class="btn-ghost-gradient btn-sm" style="border-color: #ef4444; color: #ef4444;" onclick="return confirm('¿Estás seguro de eliminar este curso?')">
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                        </svg>
+                        Eliminar
+                      </button>
+                    </form>
+                  </div>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- User Management -->
+    <div class="card hover-lift">
+      <div class="card-body">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+          <h3 class="text-xl font-semibold" style="color: var(--text-primary)">Gestión de Usuarios</h3>
+          <div class="input-group w-full sm:w-auto">
+            <div class="input-icon">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+              </svg>
+            </div>
+            <input
+              type="text"
+              id="user-search-input"
+              class="input-standard"
+              placeholder="Buscar usuarios..."
+            />
+          </div>
+        </div>
+        
+        <div class="overflow-x-auto">
+          <table class="w-full" id="user-table">
+            <thead>
+              <tr class="border-b" style="border-color: var(--border-light);">
+                <th class="text-left py-3 px-4 font-semibold" style="color: var(--text-primary);">Nombre</th>
+                <th class="text-left py-3 px-4 font-semibold" style="color: var(--text-primary);">Correo Electrónico</th>
+                <th class="text-left py-3 px-4 font-semibold" style="color: var(--text-primary);">Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for usuario in usuarios %}
+              <tr
+                class="border-b hover:bg-gray-50 transition-colors"
+                style="border-color: var(--border-light);"
+                data-search="{{ usuario.nombre.lower() }} {{ usuario.correo.lower() }}"
+              >
+                <td class="py-3 px-4" style="color: var(--text-primary);">{{ usuario.nombre }}</td>
+                <td class="py-3 px-4" style="color: var(--text-secondary);">{{ usuario.correo }}</td>
+                <td class="py-3 px-4">
+                  <div class="flex items-center gap-2">
+                    <a
+                      href="{{ url_for('editar_usuario', usuario_id=usuario.id) }}"
+                      class="btn-gradient btn-sm"
+                    >
+                      <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                      </svg>
+                      Editar
+                    </a>
+                    <form
+                      method="POST"
+                      action="{{ url_for('eliminar_usuario', usuario_id=usuario.id) }}"
+                      class="inline"
+                    >
+                      <input
+                        type="hidden"
+                        name="csrf_token"
+                        value="{{ csrf_token() }}"
+                      />
+                      <button type="submit" class="btn-ghost-gradient btn-sm" style="border-color: #ef4444; color: #ef4444;" onclick="return confirm('¿Estás seguro de eliminar este usuario?')">
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                        </svg>
+                        Eliminar
+                      </button>
+                    </form>
+                  </div>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pending Transfers -->
+    <div class="card hover-lift">
+      <div class="card-body">
+        <h3 class="text-xl font-semibold mb-6" style="color: var(--text-primary)">Transferencias Pendientes</h3>
+        
+        {% if transferencias %}
+        <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {% for transferencia in transferencias %}
+          <div class="border rounded-lg p-4 hover:shadow-md transition-shadow" style="border-color: var(--border-light); background: var(--bg-secondary);">
+            <div class="mb-3">
+              <h4 class="font-semibold" style="color: var(--text-primary)">
+                {{ transferencia.usuario.nombre }}
+              </h4>
+              <p class="text-sm" style="color: var(--text-secondary)">
+                {{ transferencia.curso.nombre }}
+              </p>
+            </div>
+            
+            <div class="mb-4">
+              <span class="badge-gradient {% if transferencia.estado == 'pendiente' %}warning{% elif transferencia.estado == 'confirmada' %}success{% else %}danger{% endif %}">
+                {{ transferencia.estado|title }}
+              </span>
+            </div>
+            
+            <div class="flex gap-2">
+              <form
+                method="POST"
+                action="{{ url_for('confirmar_transferencia', venta_id=transferencia.id) }}"
+                class="flex-1"
+              >
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+                <button type="submit" class="btn-gradient success btn-sm w-full">
+                  <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                  </svg>
+                  Aprobar
+                </button>
+              </form>
+              <form
+                method="POST"
+                action="{{ url_for('rechazar_transferencia', venta_id=transferencia.id) }}"
+                class="flex-1"
+              >
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+                <button type="submit" class="btn-ghost-gradient btn-sm w-full" style="border-color: #ef4444; color: #ef4444;" onclick="return confirm('¿Estás seguro de rechazar esta transferencia?')">
+                  <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                  </svg>
+                  Rechazar
+                </button>
+              </form>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+        {% else %}
+        <div class="text-center py-8">
+          <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+          </div>
+          <h4 class="text-lg font-medium mb-2" style="color: var(--text-primary)">No hay transferencias pendientes</h4>
+          <p style="color: var(--text-secondary)">Todas las transferencias han sido procesadas.</p>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Access Management -->
+    <div class="card hover-lift">
+      <div class="card-body">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+          <h3 class="text-xl font-semibold" style="color: var(--text-primary)">Gestión de Accesos</h3>
+          <div class="input-group w-full sm:w-auto">
+            <div class="input-icon">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+              </svg>
+            </div>
+            <input
+              type="text"
+              id="access-search-input"
+              class="input-standard"
+              placeholder="Buscar accesos..."
+            />
+          </div>
+        </div>
+        
+        <div class="overflow-x-auto">
+          <table class="w-full" id="access-table">
+            <thead>
+              <tr class="border-b" style="border-color: var(--border-light);">
+                <th class="text-left py-3 px-4 font-semibold" style="color: var(--text-primary);">Usuario</th>
+                <th class="text-left py-3 px-4 font-semibold" style="color: var(--text-primary);">Curso</th>
+                <th class="text-left py-3 px-4 font-semibold" style="color: var(--text-primary);">F. Compra</th>
+                <th class="text-left py-3 px-4 font-semibold" style="color: var(--text-primary);">F. Expiración</th>
+                <th class="text-left py-3 px-4 font-semibold" style="color: var(--text-primary);">Estado</th>
+                <th class="text-left py-3 px-4 font-semibold" style="color: var(--text-primary);">Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for venta in ventas %}
+              <tr
+                class="border-b hover:bg-gray-50 transition-colors"
+                style="border-color: var(--border-light);"
+                data-search="{{ venta.usuario.nombre.lower() }} {{ venta.curso.nombre.lower() }} {% if venta.estado_transferencia == 'confirmada' %}activo{% elif venta.estado_transferencia == 'devuelta' %}inactivo{% endif %} {{ venta.fecha_venta.strftime('%d-%m-%Y') }} {{ venta.fecha_expiracion.strftime('%d-%m-%Y') }}"
+              >
+                <td class="py-3 px-4" style="color: var(--text-primary);">{{ venta.usuario.nombre }}</td>
+                <td class="py-3 px-4" style="color: var(--text-secondary);">{{ venta.curso.nombre }}</td>
+                <td class="py-3 px-4 text-sm" style="color: var(--text-secondary);">{{ venta.fecha_venta.strftime('%d/%m/%Y') }}</td>
+                <td class="py-3 px-4 text-sm" style="color: var(--text-secondary);">{{ venta.fecha_expiracion.strftime('%d/%m/%Y') }}</td>
+                <td class="py-3 px-4">
+                  {% if venta.estado_transferencia == 'confirmada' %}
+                  <span class="badge-gradient success">Activo</span>
+                  {% elif venta.estado_transferencia == 'devuelta' %}
+                  <span class="badge-gradient danger">Inactivo</span>
+                  {% else %}
+                  <span class="badge-gradient warning">{{ venta.estado_transferencia|title }}</span>
+                  {% endif %}
+                </td>
+                <td class="py-3 px-4">
+                  {% if venta.estado_transferencia == 'confirmada' %}
+                  <form
+                    method="POST"
+                    action="{{ url_for('quitar_acceso', venta_id=venta.id) }}"
+                    class="inline"
+                  >
+                    <input
+                      type="hidden"
+                      name="csrf_token"
+                      value="{{ csrf_token() }}"
+                    />
+                    <button type="submit" class="btn-ghost-gradient btn-sm" style="border-color: #f59e0b; color: #f59e0b;" onclick="return confirm('¿Estás seguro de quitar el acceso?')">
+                      <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+                      </svg>
+                      Quitar
+                    </button>
+                  </form>
+                  {% elif venta.estado_transferencia == 'devuelta' %}
+                  <form
+                    method="POST"
+                    action="{{ url_for('activar_acceso', venta_id=venta.id) }}"
+                    class="inline"
+                  >
+                    <input
+                      type="hidden"
+                      name="csrf_token"
+                      value="{{ csrf_token() }}"
+                    />
+                    <button type="submit" class="btn-gradient success btn-sm">
+                      <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z"></path>
+                      </svg>
+                      Activar
+                    </button>
+                  </form>
+                  {% endif %}
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
   document.addEventListener('DOMContentLoaded', function() {
+    // Generic search function
+    function setupSearch(inputId, tableId) {
+      const searchInput = document.getElementById(inputId);
+      const table = document.getElementById(tableId);
+      
+      if (!searchInput || !table) return;
+      
+      const rows = table.querySelectorAll('tbody tr');
+
+      const normalizeText = (text) => {
+        return text.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+      };
+
+      searchInput.addEventListener('input', function() {
+        const searchTerm = normalizeText(this.value);
+
+        rows.forEach(function(row) {
+          const searchText = normalizeText(row.getAttribute('data-search') || '');
+          row.style.display = searchTerm === '' || searchText.includes(searchTerm) ? '' : 'none';
+        });
+      });
+    }
+
+    // Setup search functionality
     setupSearch('course-search-input', 'course-table');
     setupSearch('user-search-input', 'user-table');
     setupSearch('access-search-input', 'access-table');
 
-    // Configuración de gráficos
-    const chartsConfig = [
-      {
-        id: 'ventasTotalesChart',
+    // Chart configuration with modern gradients
+    const createGradient = (ctx, color1, color2) => {
+      const gradient = ctx.createLinearGradient(0, 0, 0, 400);
+      gradient.addColorStop(0, color1);
+      gradient.addColorStop(1, color2);
+      return gradient;
+    };
+
+    // Net Sales Chart
+    const netSalesCtx = document.getElementById('ventasNetasChart');
+    if (netSalesCtx) {
+      const ctx = netSalesCtx.getContext('2d');
+      new Chart(ctx, {
         type: 'bar',
         data: {
-          labels: ['Hoy', 'Esta Semana', 'Este Mes', 'Este Año'],
+          labels: ['Hoy', 'Semana', 'Mes', 'Año'],
           datasets: [{
-            label: 'Ventas Totales',
-            data: [{{ total_dia }}, {{ total_semana }}, {{ total_mes }}, {{ total_ano }}],
-            backgroundColor: [
-              'rgba(75, 192, 192, 0.2)',
-              'rgba(54, 162, 235, 0.2)',
-              'rgba(255, 206, 86, 0.2)',
-              'rgba(153, 102, 255, 0.2)'
-            ],
-            borderColor: [
-              'rgba(75, 192, 192, 1)',
-              'rgba(54, 162, 235, 1)',
-              'rgba(255, 206, 86, 1)',
-              'rgba(153, 102, 255, 1)'
-            ],
-            borderWidth: 1
-          }]
-        }
-      },
-      {
-        id: 'cursosMasVendidosChart',
-        type: 'bar',
-        data: {
-          labels: [{% for curso, total_ventas in cursos_mas_vendidos %}'{{ curso }}',{% endfor %}],
-          datasets: [{
-            label: 'Cursos Más Vendidos',
-            data: [{% for curso, total_ventas in cursos_mas_vendidos %}{{ total_ventas }},{% endfor %}],
-            backgroundColor: 'rgba(54, 162, 235, 0.2)',
-            borderColor: 'rgba(54, 162, 235, 1)',
-            borderWidth: 1
-          }]
-        }
-      },
-      {
-        id: 'devolucionesChart',
-        type: 'bar',
-        data: {
-          labels: [{% for curso, total_devoluciones in devoluciones %}'{{ curso }}',{% endfor %}],
-          datasets: [{
-            label: 'Devoluciones',
-            data: [{% for curso, total_devoluciones in devoluciones %}{{ total_devoluciones }},{% endfor %}],
-            backgroundColor: 'rgba(255, 99, 132, 0.2)',
-            borderColor: 'rgba(255, 99, 132, 1)',
-            borderWidth: 1
-          }]
-        }
-      },
-      {
-        id: 'ventasNetasChart',
-        type: 'bar',
-        data: {
-          labels: ['Hoy', 'Esta Semana', 'Este Mes', 'Este Año'],
-          datasets: [{
-            label: 'Ventas Netas',
+            label: 'Ventas Netas (USD)',
             data: [{{ ventas_netas_dia }}, {{ ventas_netas_semana }}, {{ ventas_netas_mes }}, {{ ventas_netas_ano }}],
             backgroundColor: [
-              'rgba(75, 192, 192, 0.2)',
-              'rgba(54, 162, 235, 0.2)',
-              'rgba(255, 206, 86, 0.2)',
-              'rgba(153, 102, 255, 0.2)'
+              'rgba(99, 102, 241, 0.8)',
+              'rgba(139, 92, 246, 0.8)',
+              'rgba(236, 72, 153, 0.8)',
+              'rgba(251, 146, 60, 0.8)'
             ],
             borderColor: [
-              'rgba(75, 192, 192, 1)',
-              'rgba(54, 162, 235, 1)',
-              'rgba(255, 206, 86, 1)',
-              'rgba(153, 102, 255, 1)'
+              'rgba(99, 102, 241, 1)',
+              'rgba(139, 92, 246, 1)',
+              'rgba(236, 72, 153, 1)',
+              'rgba(251, 146, 60, 1)'
             ],
-            borderWidth: 1
+            borderWidth: 2,
+            borderRadius: 8
           }]
-        }
-      }
-    ];
-
-    chartsConfig.forEach(config => {
-      const ctx = document.getElementById(config.id).getContext('2d');
-      new Chart(ctx, {
-        type: config.type,
-        data: config.data,
+        },
         options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              display: false
+            }
+          },
           scales: {
             y: {
-              beginAtZero: true
+              beginAtZero: true,
+              grid: {
+                color: 'rgba(0, 0, 0, 0.1)'
+              },
+              ticks: {
+                callback: function(value) {
+                  return '$' + value;
+                }
+              }
+            },
+            x: {
+              grid: {
+                display: false
+              }
             }
           }
         }
       });
+    }
+
+    // Add hover effects to cards
+    const cards = document.querySelectorAll('.card, .gradient-card');
+    cards.forEach(card => {
+      card.addEventListener('mouseenter', function() {
+        this.style.transform = 'translateY(-2px)';
+      });
+      
+      card.addEventListener('mouseleave', function() {
+        this.style.transform = 'translateY(0)';
+      });
+    });
+
+    // Animate stats on scroll
+    const animateValue = (element, start, end, duration) => {
+      let startTimestamp = null;
+      const step = (timestamp) => {
+        if (!startTimestamp) startTimestamp = timestamp;
+        const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+        const current = Math.floor(progress * (end - start) + start);
+        element.textContent = '$' + current;
+        if (progress < 1) {
+          window.requestAnimationFrame(step);
+        }
+      };
+      window.requestAnimationFrame(step);
+    };
+
+    // Observe elements for animation
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          const target = entry.target;
+          const value = parseInt(target.textContent.replace(/[^\d]/g, ''));
+          if (value > 0) {
+            animateValue(target, 0, value, 1000);
+          }
+          observer.unobserve(target);
+        }
+      });
+    });
+
+    // Start observing stat values
+    document.querySelectorAll('.text-2xl.font-bold').forEach(el => {
+      if (el.textContent.includes('$')) {
+        observer.observe(el);
+      }
     });
   });
 </script>

@@ -634,6 +634,33 @@ def activar_acceso(venta_id):
     return redirect(url_for('admin_dashboard'))
 
 
+@app.route('/health')
+def health_check():
+    """Health check endpoint for production monitoring"""
+    try:
+        # Check database connection
+        db.session.execute('SELECT 1')
+        
+        # Basic application health info
+        health_info = {
+            'status': 'healthy',
+            'timestamp': datetime.utcnow().isoformat(),
+            'version': '1.0.0',
+            'database': 'connected',
+            'environment': os.getenv('FLASK_ENV', 'development')
+        }
+        
+        return jsonify(health_info), 200
+    except Exception as e:
+        error_info = {
+            'status': 'unhealthy',
+            'timestamp': datetime.utcnow().isoformat(),
+            'error': str(e),
+            'database': 'disconnected'
+        }
+        return jsonify(error_info), 500
+
+
 with app.app_context():
     db.create_all()
 

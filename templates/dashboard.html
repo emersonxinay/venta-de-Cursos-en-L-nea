@@ -251,6 +251,55 @@
   </div>
   {% endif %}
 
+  <!-- Pending Transfers Alert -->
+  {% if current_user.is_authenticated %}
+    {% set has_pending = False %}
+    {% for venta in mis_ventas %}
+      {% if venta.estado_transferencia == 'pendiente' %}
+        {% set has_pending = True %}
+      {% endif %}
+    {% endfor %}
+    
+    {% if has_pending %}
+    <section class="animate-fadeInUp delay-200">
+      <div class="card hover-lift border-2" style="border-color: #f59e0b; background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);">
+        <div class="card-body">
+          <div class="flex items-start gap-4">
+            <div class="w-12 h-12 bg-yellow-500 rounded-full flex items-center justify-center flex-shrink-0">
+              <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+            </div>
+            <div class="flex-1">
+              <h3 class="text-lg font-bold text-yellow-900 mb-2">
+                ⏳ Tienes transferencias pendientes de confirmación
+              </h3>
+              <p class="text-yellow-800 mb-4">
+                Estamos verificando tus pagos. Mientras tanto, puedes acceder al contenido de preview de los cursos.
+              </p>
+              <div class="space-y-2">
+                {% for venta in mis_ventas %}
+                  {% if venta.estado_transferencia == 'pendiente' %}
+                  <div class="flex items-center justify-between bg-white/50 rounded-lg p-3">
+                    <div>
+                      <span class="font-medium text-yellow-900">{{ venta.curso.nombre }}</span>
+                      <span class="text-sm text-yellow-700 block">Comprado el {{ venta.fecha_venta.strftime('%d/%m/%Y') }}</span>
+                    </div>
+                    <a href="{{ url_for('ver_curso', curso_id=venta.curso.id) }}" class="btn-gradient warning btn-sm">
+                      Ver Preview
+                    </a>
+                  </div>
+                  {% endif %}
+                {% endfor %}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+    {% endif %}
+  {% endif %}
+
   <!-- Course Sections -->
   <div class="space-y-8">
     <!-- Continue Learning con Degradados -->
@@ -348,8 +397,13 @@
 
     <!-- All Courses -->
     <section class="animate-fadeInUp delay-400">
-      <div class="flex items-center justify-between mb-6">
-        <h2 class="text-2xl font-bold" style="color: var(--text-primary)">Todos los Cursos</h2>
+      <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-6">
+        <div>
+          <h2 class="text-2xl font-bold" style="color: var(--text-primary)">Todos los Cursos</h2>
+          <p class="text-sm mt-1" style="color: var(--text-secondary)">
+            💡 <strong>¡Prueba antes de comprar!</strong> Cada curso incluye 2 lecciones gratuitas para que evalúes el contenido
+          </p>
+        </div>
         <div class="flex items-center gap-3">
           <select class="input-standard" id="sort-select" style="min-width: 200px;">
             <option value="name">Ordenar por nombre</option>
@@ -374,13 +428,31 @@
           </div>
           
           <div class="card-body" style="background: var(--bg-primary); color: var(--text-primary);">
-            <h3 class="font-semibold mb-2 line-clamp-2" style="color: var(--text-primary);">
-              {{ curso.nombre }}
+            <h3 class="font-semibold mb-2 line-clamp-2">
+              <a href="{{ url_for('ver_curso', curso_id=curso.id) }}" 
+                 class="hover:opacity-80 transition-opacity flex items-center gap-2" 
+                 style="color: var(--text-primary);"
+                 title="Haz clic para ver el contenido del curso">
+                {{ curso.nombre }}
+                <svg class="w-4 h-4 opacity-60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                </svg>
+              </a>
             </h3>
             
-            <p class="text-sm mb-4 line-clamp-3" style="color: var(--text-secondary);">
+            <p class="text-sm mb-3 line-clamp-3" style="color: var(--text-secondary);">
               {{ curso.descripcion or 'Descripción del curso no disponible.' }}
             </p>
+            
+            <!-- Preview Available Badge -->
+            {% if not user_purchased and not user_pending %}
+            <div class="mb-3">
+              <span class="badge-gradient success text-xs">
+                🎁 2 Lecciones Gratis
+              </span>
+            </div>
+            {% endif %}
             
             <div class="flex items-center justify-between">
               <span class="text-2xl font-bold" style="color: var(--color-primary);">
@@ -388,9 +460,12 @@
               </span>
               
               {% set user_purchased = False %}
+              {% set user_pending = False %}
               {% for venta in mis_ventas %}
                 {% if venta.curso.id == curso.id and venta.estado_transferencia == 'confirmada' %}
                   {% set user_purchased = True %}
+                {% elif venta.curso.id == curso.id and venta.estado_transferencia == 'pendiente' %}
+                  {% set user_pending = True %}
                 {% endif %}
               {% endfor %}
               
@@ -402,14 +477,35 @@
                   </svg>
                   Acceder
                 </a>
+              {% elif user_pending %}
+                <div class="flex flex-col gap-2">
+                  <a href="{{ url_for('ver_curso', curso_id=curso.id) }}" 
+                     class="btn-ghost-gradient btn-sm" style="border-color: #f59e0b; color: #f59e0b;">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    Pendiente
+                  </a>
+                  <span class="text-xs" style="color: var(--text-secondary);">Preview disponible</span>
+                </div>
               {% else %}
-                <a href="{{ url_for('comprar_curso', curso_id=curso.id) }}" 
-                   class="btn-gradient btn-sm">
-                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4m.6 8L4 6H2m3 7v6a1 1 0 001 1h10a1 1 0 001-1v-6M5 13h14"></path>
-                  </svg>
-                  Comprar
-                </a>
+                <div class="flex flex-col gap-2">
+                  <a href="{{ url_for('ver_curso', curso_id=curso.id) }}" 
+                     class="btn-ghost-gradient btn-sm">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                    </svg>
+                    Ver Preview Gratis
+                  </a>
+                  <a href="{{ url_for('comprar_curso', curso_id=curso.id) }}" 
+                     class="btn-gradient btn-sm">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4m.6 8L4 6H2m3 7v6a1 1 0 001 1h10a1 1 0 001-1v-6M5 13h14"></path>
+                    </svg>
+                    Comprar Curso
+                  </a>
+                </div>
               {% endif %}
             </div>
           </div>

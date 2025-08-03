@@ -3,6 +3,25 @@
 
 {% block content %}
 <div class="container-fluid py-6">
+  <!-- Breadcrumb Navigation -->
+  <div class="mb-6 animate-fadeIn">
+    <nav class="flex items-center gap-2 text-sm" style="color: var(--text-secondary);">
+      <a href="{{ url_for('dashboard') }}" class="hover:text-primary-600 transition-colors" style="color: var(--color-primary);">
+        <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2 2v10z"></path>
+        </svg>
+        Dashboard
+      </a>
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+      </svg>
+      <span style="color: var(--text-primary);" class="font-medium">{{ curso.nombre }}</span>
+      
+      {% if not tiene_acceso_completo %}
+      <span class="badge-gradient success text-xs ml-2">🎁 Preview Gratis</span>
+      {% endif %}
+    </nav>
+  </div>
   <!-- Course Header with Modern Gradient -->
   <div class="mb-8 animate-fadeIn">
     <div class="gradient-card" style="background: var(--gradient-primary)">
@@ -65,7 +84,35 @@
 
           <!-- Purchase/Access Card -->
           <div class="w-full lg:w-80">
-            {% if not (current_user.is_authenticated and venta) %}
+            {% if venta_pendiente %}
+            <!-- Pending Transfer Status -->
+            <div class="card glass-effect border-2" style="border-color: #f59e0b;">
+              <div class="card-body text-center">
+                <div class="w-16 h-16 mx-auto mb-4 bg-yellow-500/20 rounded-full flex items-center justify-center">
+                  <svg class="w-8 h-8 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                  </svg>
+                </div>
+                <h3 class="text-xl font-bold mb-2 text-white">
+                  ⏳ Transferencia Pendiente
+                </h3>
+                <p class="text-white/80 mb-4">
+                  Tu pago está siendo verificado. Recibirás acceso completo una vez confirmado.
+                </p>
+                <div class="bg-yellow-500/10 rounded-lg p-3 mb-4">
+                  <p class="text-sm text-yellow-200">
+                    <strong>Estado:</strong> En revisión<br>
+                    <strong>Fecha:</strong> {{ venta_pendiente.fecha_venta.strftime('%d/%m/%Y') }}
+                  </p>
+                </div>
+                <div class="text-sm text-white/60">
+                  💡 Mientras tanto, puedes ver {{ max_preview_sections }} lecciones de preview
+                </div>
+              </div>
+            </div>
+            
+            {% elif not tiene_acceso_completo %}
+            <!-- Purchase Card -->
             <div class="card glass-effect">
               <div class="card-body text-center">
                 <div class="mb-6">
@@ -80,11 +127,21 @@
                   <div class="text-sm text-white/80">Precio único</div>
                 </div>
                 
+                <div class="bg-blue-500/10 rounded-lg p-3 mb-4">
+                  <p class="text-sm text-blue-200">
+                    🎁 <strong>Acabas de ver {{ max_preview_sections }} lecciones gratis</strong><br>
+                    Hay {{ secciones|length - max_preview_sections }} lecciones más en el curso completo
+                  </p>
+                  <div class="mt-2 text-xs text-blue-300">
+                    💡 Desplázate hacia abajo para ver el contenido de preview
+                  </div>
+                </div>
+                
                 <a href="{{ url_for('comprar_curso', curso_id=curso.id) }}" class="btn-gradient w-full mb-4">
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4m.6 8L4 6H2m3 7v6a1 1 0 001 1h10a1 1 0 001-1v-6m0 0V9a2 2 0 012-2V7a2 2 0 00-2-2H9a2 2 0 00-2 2v2a2 2 0 012 2v4.01"></path>
                   </svg>
-                  Comprar Curso
+                  Comprar Curso Completo
                 </a>
                 
                 <div class="flex items-center justify-center gap-2 text-sm text-white/80">
@@ -145,9 +202,21 @@
       <h2 class="text-3xl font-bold mb-2" style="color: var(--text-primary)">
         Contenido del Curso
       </h2>
-      <p style="color: var(--text-secondary)" class="text-lg">
-        {{ secciones|length }} {{ 'lección' if secciones|length == 1 else 'lecciones' }} de contenido premium
-      </p>
+      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <p style="color: var(--text-secondary)" class="text-lg">
+          {{ secciones|length }} {{ 'lección' if secciones|length == 1 else 'lecciones' }} de contenido premium
+        </p>
+        
+        <!-- Preview Info -->
+        {% if not tiene_acceso_completo %}
+        <div class="bg-green-100 border border-green-300 rounded-lg px-4 py-2">
+          <p class="text-sm text-green-800 font-medium">
+            ✅ <strong>{{ max_preview_sections }} lecciones gratis</strong> • 
+            🔒 {{ secciones|length - max_preview_sections }} lecciones premium
+          </p>
+        </div>
+        {% endif %}
+      </div>
     </div>
 
     <!-- Certificate Modal (if has access and completed) -->
@@ -211,7 +280,9 @@
                 <h3 class="text-xl font-semibold" style="color: var(--text-primary)">
                   {{ seccion.titulo }}
                 </h3>
-                {% if seccion.es_gratis %}
+                {% if seccion.es_preview_gratis %}
+                <span class="badge-gradient success">PREVIEW GRATIS</span>
+                {% elif seccion.es_gratis %}
                 <span class="badge-gradient success">GRATIS</span>
                 {% endif %}
               </div>
@@ -226,8 +297,29 @@
           </div>
 
           <!-- Section Content -->
-          {% if seccion.es_gratis or (current_user.is_authenticated and venta) %}
+          {% if seccion.es_accesible %}
+          <!-- CONTENIDO ACCESIBLE: Preview gratis O usuario con acceso completo -->
           <div class="border-t" style="border-color: var(--border-light); padding-top: 1rem;">
+            
+            <!-- Preview Badge - Solo mostrar si es preview gratis y el usuario no tiene acceso completo -->
+            {% if seccion.es_preview_gratis and not tiene_acceso_completo %}
+            <div class="mb-4">
+              <span class="badge-gradient success">
+                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                </svg>
+                🎁 PREVIEW GRATUITO
+              </span>
+              {% if loop.index <= max_preview_sections %}
+              <div class="mt-2">
+                <p class="text-sm" style="color: var(--text-secondary);">
+                  💡 <strong>Lección {{ loop.index }} de {{ max_preview_sections }}</strong> disponible gratis para que pruebes el curso
+                </p>
+              </div>
+              {% endif %}
+            </div>
+            {% endif %}
             {% if seccion.video_url or seccion.video_file %}
             <div class="video-container bg-gray-900 rounded-lg overflow-hidden mb-4">
               {% if seccion.video_url %}
@@ -310,24 +402,74 @@
             {% endif %}
           </div>
           {% else %}
-          <!-- Locked Content -->
+          <!-- CONTENIDO BLOQUEADO: Solo mostrar título y descripción -->
           <div class="border-t" style="border-color: var(--border-light); padding-top: 1rem;">
-            <div class="text-center py-8 px-4 bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg">
-              <div class="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
-                </svg>
+            <div class="py-6 px-4 bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg relative overflow-hidden">
+              <!-- Background pattern sutil -->
+              <div class="absolute inset-0 opacity-5">
+                <div class="absolute inset-0" style="background-image: url('data:image/svg+xml,<svg width=\"20\" height=\"20\" viewBox=\"0 0 20 20\" xmlns=\"http://www.w3.org/2000/svg\"><g fill=\"%23000\" fill-opacity=\"0.1\"><circle cx=\"3\" cy=\"3\" r=\"1\"/><circle cx=\"13\" cy=\"13\" r=\"1\"/><circle cx=\"3\" cy=\"13\" r=\"1\"/><circle cx=\"13\" cy=\"3\" r=\"1\"/></g></svg>');"></div>
               </div>
-              <h4 class="text-lg font-semibold mb-2" style="color: var(--text-primary)">Contenido Premium</h4>
-              <p style="color: var(--text-secondary)" class="mb-4">
-                Este contenido está bloqueado. Compra el curso para acceder a todas las lecciones.
-              </p>
-              <a href="{{ url_for('comprar_curso', curso_id=curso.id) }}" class="btn-gradient">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z"></path>
-                </svg>
-                Desbloquear Curso
-              </a>
+              
+              <div class="relative z-10">
+                <!-- Solo mostrar info básica de la lección -->
+                <div class="flex items-center justify-between mb-3">
+                  <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center shadow-lg">
+                      <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+                      </svg>
+                    </div>
+                    <div>
+                      <h4 class="text-lg font-semibold" style="color: var(--text-primary)">
+                        🔒 {{ seccion.titulo }}
+                      </h4>
+                      <p class="text-sm" style="color: var(--text-secondary)">
+                        Lección {{ loop.index }} • {{ seccion.duracion }} min
+                      </p>
+                    </div>
+                  </div>
+                  
+                  {% if venta_pendiente %}
+                  <span class="badge-gradient warning text-xs">Tras confirmación</span>
+                  {% else %}
+                  <span class="badge-gradient primary text-xs">Premium</span>
+                  {% endif %}
+                </div>
+                
+                <!-- Descripción de la lección (solo un preview) -->
+                {% if seccion.descripcion %}
+                <div class="mb-4">
+                  <p class="text-sm" style="color: var(--text-secondary);">
+                    {{ seccion.descripcion[:100] }}{% if seccion.descripcion|length > 100 %}...{% endif %}
+                  </p>
+                </div>
+                {% endif %}
+                
+                <!-- Call to action dependiendo del estado -->
+                {% if venta_pendiente %}
+                <div class="bg-yellow-100 border border-yellow-300 rounded-lg p-3 text-center">
+                  <p class="text-sm text-yellow-800">
+                    ⏳ <strong>Transferencia en revisión</strong><br>
+                    Esta lección estará disponible una vez confirmemos tu pago
+                  </p>
+                </div>
+                {% else %}
+                <!-- Solo mostrar esto en las últimas lecciones para no saturar -->
+                {% if loop.index == secciones|length or (loop.index > max_preview_sections and loop.index % 3 == 0) %}
+                <div class="text-center">
+                  <p class="text-sm mb-3" style="color: var(--text-secondary);">
+                    <strong>{{ secciones|length - max_preview_sections }}</strong> lecciones más disponibles con el curso completo
+                  </p>
+                  <a href="{{ url_for('comprar_curso', curso_id=curso.id) }}" class="btn-gradient btn-sm">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z"></path>
+                    </svg>
+                    Desbloquear Curso
+                  </a>
+                </div>
+                {% endif %}
+                {% endif %}
+              </div>
             </div>
           </div>
           {% endif %}

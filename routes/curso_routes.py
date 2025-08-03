@@ -26,12 +26,63 @@ class CursoRoutes:
             with self.flask_app.app_context():
                 curso = self.Curso.query.get_or_404(curso_id)
                 secciones = self.Seccion.query.filter_by(
-                    curso_id=curso_id).all()
-                venta = None
+                    curso_id=curso_id).order_by(self.Seccion.id).all()
+                
+                venta_confirmada = None
+                venta_pendiente = None
+                
+                # Solo buscar ventas si el usuario está autenticado
                 if current_user.is_authenticated:
-                    venta = self.Venta.query.filter_by(
-                        usuario_id=current_user.id, curso_id=curso_id, estado_transferencia='confirmada').first()
-                return render_template('ver_curso.html', curso=curso, secciones=secciones, venta=venta)
+                    # Buscar venta confirmada
+                    venta_confirmada = self.Venta.query.filter_by(
+                        usuario_id=current_user.id, 
+                        curso_id=curso_id, 
+                        estado_transferencia='confirmada'
+                    ).first()
+                    
+                    # Buscar venta pendiente
+                    venta_pendiente = self.Venta.query.filter_by(
+                        usuario_id=current_user.id, 
+                        curso_id=curso_id, 
+                        estado_transferencia='pendiente'
+                    ).first()
+                
+                # Determinar qué secciones son accesibles
+                # 1. Si es admin, puede ver todo
+                # 2. Si tiene venta confirmada, puede ver todo  
+                # 3. TODOS (incluso sin login) pueden ver las primeras 2 lecciones completas
+                # 4. Si tiene transferencia pendiente, igual solo ve preview (primeras 2)
+                
+                # IMPORTANTE: Solo check authenticated después de verificar que current_user existe
+                es_admin = current_user.is_authenticated and hasattr(current_user, 'rol') and current_user.rol == 'admin'
+                tiene_venta_confirmada = venta_confirmada is not None
+                
+                tiene_acceso_completo = es_admin or tiene_venta_confirmada
+                
+                # CAMBIO IMPORTANTE: Las primeras 2 secciones son SIEMPRE accesibles para TODOS
+                MAX_PREVIEW_SECTIONS = 2
+                
+                for i, seccion in enumerate(secciones):
+                    if i < MAX_PREVIEW_SECTIONS:
+                        # Las primeras 2 son SIEMPRE accesibles para TODOS
+                        seccion.es_preview_gratis = True
+                        seccion.es_accesible = True
+                        seccion.es_bloqueado = False
+                    else:
+                        # Las demás solo accesibles si tiene acceso completo
+                        seccion.es_preview_gratis = False
+                        seccion.es_accesible = tiene_acceso_completo
+                        seccion.es_bloqueado = not tiene_acceso_completo
+                
+                return render_template(
+                    'ver_curso.html', 
+                    curso=curso, 
+                    secciones=secciones, 
+                    venta=venta_confirmada,
+                    venta_pendiente=venta_pendiente,
+                    tiene_acceso_completo=tiene_acceso_completo,
+                    max_preview_sections=MAX_PREVIEW_SECTIONS
+                )
 
         @self.app.route('/curso/<int:curso_id>/seccion/nueva', methods=['GET', 'POST'])
         @login_required
