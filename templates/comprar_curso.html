@@ -1,6 +1,11 @@
 {% extends "base.html" %}
 {% block title %}Comprar Curso - {{ curso.nombre }}{% endblock %}
 
+{% block extra_css %}
+<!-- CSS específico para comprar curso -->
+<link rel="stylesheet" href="{{ url_for('static', filename='css/styles_comprar_curso.css') }}" />
+{% endblock %}
+
 {% block content %}
 <div class="container-fluid py-6">
   <!-- Header del Curso -->

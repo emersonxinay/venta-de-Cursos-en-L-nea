@@ -2,6 +2,8 @@
 {% block title %}Dashboard - CompilandoCode{% endblock %}
 
 {% block extra_css %}
+<!-- CSS específico del dashboard -->
+<link rel="stylesheet" href="{{ url_for('static', filename='css/styles_dashboard.css') }}" />
 <style>
   /* Estilos mejorados con mobile-first y degradados */
   .stats-grid {

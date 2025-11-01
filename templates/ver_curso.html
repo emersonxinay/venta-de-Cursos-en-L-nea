@@ -1,6 +1,11 @@
 {% extends "base.html" %}
 {% block title %}{{ curso.nombre }} - CompilandoCode{% endblock %}
 
+{% block extra_css %}
+<!-- CSS específico para ver curso -->
+<link rel="stylesheet" href="{{ url_for('static', filename='css/styles_ver_curso.css') }}" />
+{% endblock %}
+
 {% block content %}
 <div class="container-fluid py-6">
   <!-- Breadcrumb Navigation -->

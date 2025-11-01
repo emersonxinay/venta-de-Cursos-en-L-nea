@@ -2,6 +2,8 @@
 {% block title %}Dashboard de Administrador - CompilandoCode{% endblock %}
 
 {% block extra_css %}
+<!-- CSS específico del admin dashboard -->
+<link rel="stylesheet" href="{{ url_for('static', filename='css/styles_admin_dashboard.css') }}" />
 <style>
 .stats-grid {
   display: grid;

@@ -142,6 +142,22 @@ def init_app():
         init_routes(app)
         app._routes_initialized = True
 
+    # Configurar optimizaciones de performance
+    if not hasattr(app, '_performance_configured'):
+        try:
+            from config_performance import configure_performance, optimize_database_queries
+            configure_performance(app)
+
+            # Configurar optimización de queries dentro del contexto
+            with app.app_context():
+                optimize_database_queries(db)
+
+            app._performance_configured = True
+            print("✅ Performance optimizations enabled")
+        except Exception as e:
+            print(f"⚠️  Performance optimization error: {e}")
+            print("✅ App will continue without performance optimizations")
+
 # fin de rutas modularizadas
 
 # inicio de vistas de cursos, progreso y certificado

@@ -1,0 +1,124 @@
+/**
+ * App Main CSS
+ * Punto de entrada principal para todos los estilos
+ * Importa todos los módulos CSS en el orden correcto
+ */
+
+/* ========================================
+   1. BASE - Variables y configuración base
+   ======================================== */
+@import url('./main.css');
+@import url('./design-system.css');
+
+/* ========================================
+   2. UTILITIES - Utilidades y animaciones
+   ======================================== */
+@import url('./animations.css');
+
+/* ========================================
+   3. COMPONENTS - Componentes reutilizables
+   ======================================== */
+@import url('./components.css');
+@import url('./modern-ui.css');
+
+/* ========================================
+   4. LAYOUT - Layout general
+   ======================================== */
+@import url('./styles_navbar.css');
+@import url('./styles_footer.css');
+
+/* ========================================
+   5. PAGES - Estilos específicos por página
+   ======================================== */
+@import url('./auth.css');
+@import url('./styles_login.css');
+@import url('./styles_dashboard.css');
+@import url('./styles_admin_dashboard.css');
+@import url('./styles_ver_curso.css');
+@import url('./styles_comprar_curso.css');
+
+/* ========================================
+   6. GLOBAL OVERRIDES - Sobrescrituras globales
+   ======================================== */
+@import url('./styles.css');
+
+/* ========================================
+   7. RESPONSIVE - Media queries globales
+   ======================================== */
+
+/* Mobile First - Base styles are mobile */
+
+/* Tablet */
+@media (min-width: 768px) {
+  :root {
+    --container-padding: 2rem;
+  }
+}
+
+/* Desktop */
+@media (min-width: 1024px) {
+  :root {
+    --container-padding: 3rem;
+  }
+}
+
+/* Large Desktop */
+@media (min-width: 1280px) {
+  :root {
+    --container-padding: 4rem;
+  }
+}
+
+/* ========================================
+   8. PRINT STYLES
+   ======================================== */
+
+@media print {
+  .no-print {
+    display: none !important;
+  }
+
+  body {
+    background: white;
+    color: black;
+  }
+
+  .gradient-card,
+  .card {
+    border: 1px solid #ddd;
+    box-shadow: none;
+  }
+}
+
+/* ========================================
+   9. ACCESSIBILITY
+   ======================================== */
+
+/* Focus visible para keyboard navigation */
+*:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+/* Reduce motion para usuarios que lo prefieren */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* High contrast mode */
+@media (prefers-contrast: high) {
+  :root {
+    --border-light: #000;
+  }
+
+  .gradient-card,
+  .card {
+    border: 2px solid currentColor;
+  }
+}

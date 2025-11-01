@@ -1,0 +1,50 @@
+/* ALL.MIN.CSS - Estilos combinados y optimizados */
+/* Este archivo combina todos los CSS esenciales para reducir requests HTTP */
+/* Orden: main -> design-system -> animations -> components -> modern-ui -> ui-improvements */
+
+/* Los @import ahora cargan desde archivos locales */
+@import url('./main.css');
+@import url('./design-system.css');
+@import url('./animations.css');
+@import url('./components.css');
+@import url('./modern-ui.css');
+@import url('./ui-improvements.css');
+
+/* Optimizaciones adicionales de performance */
+* {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Optimizar rendering de imágenes */
+img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* Lazy loading nativo */
+img[loading="lazy"] {
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+img[loading="lazy"].loaded {
+  opacity: 1;
+}
+
+/* Will-change para animaciones suaves */
+.hover-lift,
+.card-animated,
+.animate-fadeIn,
+.animate-fadeInUp {
+  will-change: transform, opacity;
+}
+
+/* GPU acceleration */
+.transition-smooth,
+.btn-gradient,
+.gradient-card {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}

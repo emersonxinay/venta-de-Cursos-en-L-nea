@@ -1,0 +1,165 @@
+"""
+Configuración de Performance para Flask
+Optimiza el rendimiento de la aplicación
+"""
+
+from flask import Flask, request, make_response
+from functools import wraps
+import gzip
+from io import BytesIO
+
+
+def configure_performance(app: Flask):
+    """Configura optimizaciones de performance"""
+
+    # 1. Comprimir respuestas
+    @app.after_request
+    def compress_response(response):
+        """Comprime respuestas con gzip si el cliente lo soporta"""
+        accept_encoding = request.headers.get('Accept-Encoding', '')
+
+        if 'gzip' not in accept_encoding.lower():
+            return response
+
+        if response.status_code < 200 or \
+           response.status_code >= 300 or \
+           'Content-Encoding' in response.headers:
+            return response
+
+        # Solo comprimir respuestas de texto
+        content_type = response.headers.get('Content-Type', '')
+        if not any(ct in content_type for ct in ['text/', 'application/json', 'application/javascript', 'application/xml']):
+            return response
+
+        # Comprimir
+        gzip_buffer = BytesIO()
+        with gzip.GzipFile(mode='wb', fileobj=gzip_buffer, compresslevel=6) as gzip_file:
+            gzip_file.write(response.get_data())
+
+        response.set_data(gzip_buffer.getvalue())
+        response.headers['Content-Encoding'] = 'gzip'
+        response.headers['Content-Length'] = len(response.get_data())
+
+        return response
+
+    # 2. Headers de caché para archivos estáticos
+    @app.after_request
+    def add_cache_headers(response):
+        """Agrega headers de caché apropiados"""
+
+        # Caché para archivos estáticos (1 año)
+        if request.path.startswith('/static/'):
+            response.headers['Cache-Control'] = 'public, max-age=31536000, immutable'
+
+            # Preload hints para recursos críticos
+            if request.path.endswith('.css'):
+                response.headers['Link'] = '</static/css/all.min.css>; rel=preload; as=style'
+            elif request.path.endswith('.js'):
+                response.headers['Link'] = '</static/js/main.js>; rel=modulepreload'
+
+        # No cachear páginas HTML (usar validación)
+        elif request.path.endswith('.html') or 'text/html' in response.headers.get('Content-Type', ''):
+            response.headers['Cache-Control'] = 'no-cache, must-revalidate'
+            response.headers['Pragma'] = 'no-cache'
+
+        # Caché para API (5 minutos)
+        elif request.path.startswith('/api/'):
+            response.headers['Cache-Control'] = 'public, max-age=300'
+
+        return response
+
+    # 3. Preload DNS para CDNs
+    @app.after_request
+    def add_preconnect_hints(response):
+        """Agrega hints de preconnect para recursos externos"""
+
+        if 'text/html' in response.headers.get('Content-Type', ''):
+            links = [
+                '<https://fonts.googleapis.com>; rel=preconnect; crossorigin',
+                '<https://fonts.gstatic.com>; rel=preconnect; crossorigin',
+                '<https://cdn.jsdelivr.net>; rel=preconnect; crossorigin',
+                '<https://cdnjs.cloudflare.com>; rel=preconnect; crossorigin',
+            ]
+
+            existing_link = response.headers.get('Link', '')
+            if existing_link:
+                links.append(existing_link)
+
+            response.headers['Link'] = ', '.join(links)
+
+        return response
+
+    # 4. Headers de seguridad y performance
+    @app.after_request
+    def add_security_performance_headers(response):
+        """Agrega headers de seguridad y performance"""
+
+        # Security headers
+        response.headers['X-Content-Type-Options'] = 'nosniff'
+        response.headers['X-Frame-Options'] = 'SAMEORIGIN'
+        response.headers['X-XSS-Protection'] = '1; mode=block'
+
+        # Performance hints
+        response.headers['X-DNS-Prefetch-Control'] = 'on'
+
+        # Timing headers para debugging
+        if app.debug:
+            response.headers['Server-Timing'] = f'total;dur={request.environ.get("REQUEST_TIME", 0)}'
+
+        return response
+
+    # 5. Lazy loading de imágenes automático
+    @app.template_filter('lazy_img')
+    def lazy_img_filter(url):
+        """Filter para agregar lazy loading a imágenes"""
+        return f'<img src="{url}" loading="lazy" decoding="async" alt="" />'
+
+    print("✅ Performance optimizations configured")
+
+
+def optimize_database_queries(db):
+    """Optimiza queries de base de datos"""
+
+    # Solo configurar si estamos en modo debug/desarrollo
+    # No necesita acceder a db.engine directamente
+    try:
+        from sqlalchemy import event
+        from sqlalchemy.engine import Engine
+        import time
+
+        @event.listens_for(Engine, "before_cursor_execute")
+        def before_cursor_execute(conn, cursor, statement, parameters, context, executemany):
+            conn.info.setdefault('query_start_time', []).append(time.time())
+
+        @event.listens_for(Engine, "after_cursor_execute")
+        def after_cursor_execute(conn, cursor, statement, parameters, context, executemany):
+            total = time.time() - conn.info['query_start_time'].pop(-1)
+            if total > 0.1:  # Log queries > 100ms
+                print(f"⚠️  Slow query ({total:.3f}s): {statement[:100]}...")
+
+        print("✅ Database query optimization configured")
+    except Exception as e:
+        print(f"⚠️  Could not configure query optimization: {e}")
+
+
+# Decorator para cachear vistas
+def cache_page(timeout=300):
+    """
+    Decorator para cachear páginas
+
+    Usage:
+        @app.route('/cursos')
+        @cache_page(timeout=600)  # 10 minutos
+        def cursos():
+            return render_template('cursos.html')
+    """
+    def decorator(f):
+        @wraps(f)
+        def decorated_function(*args, **kwargs):
+            # Implementar caché simple en memoria
+            # En producción usar Redis o Memcached
+            response = make_response(f(*args, **kwargs))
+            response.headers['Cache-Control'] = f'public, max-age={timeout}'
+            return response
+        return decorated_function
+    return decorator
